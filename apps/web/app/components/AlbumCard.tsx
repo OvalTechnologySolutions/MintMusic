@@ -2,8 +2,7 @@ import Image from 'next/image';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import MintMusicABI from '../../abis/MintMusic.json';
-
-const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+import { getContractAddress } from '@/lib/contracts';
 
 interface AlbumProps {
   id: number;
@@ -24,9 +23,11 @@ export default function AlbumCard({ album }: { album: AlbumProps }) {
   
   const purchase = async () => {
     if (isOwned || isSoldOut) return;
-    
+    const address = getContractAddress();
+    if (!address) return;
+
     writeContract({
-      address: CONTRACT_ADDRESS,
+      address,
       abi: MintMusicABI.abi,
       functionName: 'purchase',
       args: [BigInt(album.id), 1n],

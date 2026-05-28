@@ -236,13 +236,16 @@ Create `apps/api/.env.example` with `DATABASE_URL`, `PINATA_JWT`, `MUX_TOKEN_ID`
 
 ```bash
 # Terminal 1 — chain (optional for full flow)
-cd smart-contracts && npm install && npx hardhat node
+cd packages/contracts && npm install && npx hardhat node
 
 # Terminal 2 — deploy
-cd smart-contracts && npx hardhat run scripts/deploy.ts --network localhost
+cd packages/contracts && npx hardhat run scripts/deploy.ts --network localhost
 
-# Terminal 3 — frontend (use full permissions if sandbox breaks network hosts)
-cd frontend && npm install && npm run dev -- -H 127.0.0.1
+# Terminal 3 — API
+npm run dev:api
+
+# Terminal 4 — web
+npm run dev:web
 ```
 
 Open http://127.0.0.1:3000 — expect wallet/contract limitations documented in the security audit.

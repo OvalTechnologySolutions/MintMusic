@@ -1,0 +1,16 @@
+{
+  "name": "mintmusic",
+  "version": "0.2.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w @mintmusic/web",
+    "dev:api": "npm run dev -w @mintmusic/api",
+    "build:web": "npm run build -w @mintmusic/web",
+    "build:api": "npm run build -w @mintmusic/api",
+    "lint:web": "npm run lint -w @mintmusic/web"
+  }
+}

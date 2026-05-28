@@ -7,8 +7,8 @@ import { parseEther } from 'viem';
 import MintMusicABI from '../abis/MintMusic.json';
 import FanView from './components/FanView';
 import LandingPage from './components/LandingPage';
-
-const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Localhost default deploy address
+import ArtistProfilePanel from './components/profile/ArtistProfilePanel';
+import { getContractAddress } from '@/lib/contracts';
 
 export default function Home() {
   const [showApp, setShowApp] = useState(false);
@@ -76,28 +76,14 @@ function ArtistView() {
   const [price, setPrice] = useState('');
   const [uri, setUri] = useState('');
   const [title, setTitle] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
-  const [fileName, setFileName] = useState('');
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setIsUploading(true);
-      setFileName(e.target.files[0].name);
-      // Simulate IPFS upload
-      console.log("Uploading file to IPFS...", e.target.files[0].name);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      // In a real app, use Pinata or IPFS API here
-      setUri("ipfs://QmMockHash1234567890"); 
-      setIsUploading(false);
-    }
-  };
+  const contractAddress = getContractAddress();
 
   const createRelease = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supply || !price || !uri) return;
+    if (!supply || !price || !uri || !contractAddress) return;
 
     writeContract({
-      address: CONTRACT_ADDRESS,
+      address: contractAddress,
       abi: MintMusicABI.abi,
       functionName: 'createRelease',
       args: [BigInt(supply), parseEther(price), uri, 1000n], // 10% royalty default
@@ -106,6 +92,8 @@ function ArtistView() {
 
   return (
     <div className="max-w-4xl">
+      <ArtistProfilePanel />
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
@@ -153,38 +141,17 @@ function ArtistView() {
               </div>
               
               <div>
-                <label className="block mb-2 text-sm font-medium text-gray-300">Audio File</label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <div className="bg-gray-900 border border-dashed border-gray-600 p-6 rounded-xl text-center hover:border-green-500 transition-colors">
-                    {isUploading ? (
-                      <div className="flex flex-col items-center">
-                        <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-                        <p className="text-yellow-400 text-sm">Uploading to IPFS...</p>
-                      </div>
-                    ) : fileName ? (
-                      <div className="flex flex-col items-center">
-                        <svg className="w-8 h-8 text-green-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <p className="text-green-400 text-sm">{fileName}</p>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center">
-                        <svg className="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <p className="text-gray-400 text-sm">Click to upload audio file</p>
-                        <p className="text-gray-500 text-xs mt-1">MP3, WAV, FLAC supported</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <label className="block mb-2 text-sm font-medium text-gray-300">Metadata URI (IPFS)</label>
+                <input
+                  type="text"
+                  value={uri}
+                  onChange={(e) => setUri(e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-700 p-4 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="ipfs://... (API upload coming in Phase A)"
+                />
+                <p className="text-gray-500 text-xs mt-2">
+                  Audio upload will route through @mintmusic/api + Pinata
+                </p>
               </div>
             </div>
 
