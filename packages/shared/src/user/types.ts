@@ -80,3 +80,9 @@ export interface CreateCheckoutResponse {
   url: string;
   sessionId: string;
 }
+
+export interface CreateReleaseCheckoutRequest {
+  releaseId: string;
+  successUrl: string;
+  cancelUrl: string;
+}

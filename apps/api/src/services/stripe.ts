@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { config, isStripeConfigured } from '../config.js';
+import { isDatabaseConfigured } from '../config/env.js';
 import { findUserById, setStripeConnect } from '../store/users.js';
 
 let stripe: Stripe | null = null;
@@ -137,6 +138,133 @@ export async function createDonationCheckout(
   return { url: session.url, sessionId: session.id };
 }
 
+export async function createReleaseCheckout(
+  collectorUserId: string,
+  releaseId: string,
+  successUrl: string,
+  cancelUrl: string
+): Promise<{ url: string; sessionId: string }> {
+  if (!isDatabaseConfigured()) {
+    throw new Error('Database not configured');
+  }
+
+  const { getPrisma } = await import('../lib/prisma.js');
+  const db = await getPrisma();
+
+  const release = await db.release.findFirst({
+    where: { id: releaseId, published: true },
+    include: { creator: true },
+  });
+  if (!release) throw new Error('Release not found');
+
+  if (release.creatorId === collectorUserId) {
+    throw new Error('Creators cannot purchase their own releases');
+  }
+
+  const existing = await db.purchase.findUnique({
+    where: {
+      collectorId_releaseId: {
+        collectorId: collectorUserId,
+        releaseId,
+      },
+    },
+  });
+  if (existing) throw new Error('You already own this release');
+
+  const creator = await findUserById(release.creatorId);
+  if (!creator?.stripeConnectAccountId) {
+    throw new Error('Creator has not connected Stripe for payouts');
+  }
+
+  const status = await refreshConnectStatus(release.creatorId);
+  if (!status.chargesEnabled) {
+    throw new Error('Creator cannot accept payments yet');
+  }
+
+  if (release.priceCents < 50) {
+    throw new Error('Release price is too low for checkout');
+  }
+
+  const client = getStripe();
+  const session = await client.checkout.sessions.create({
+    mode: 'payment',
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: release.currency,
+          unit_amount: release.priceCents,
+          product_data: {
+            name: release.title,
+            description: `${release.type} by ${release.creator.name}`,
+            ...(release.coverUrl ? { images: [release.coverUrl] } : {}),
+          },
+        },
+      },
+    ],
+    payment_intent_data: {
+      transfer_data: {
+        destination: creator.stripeConnectAccountId,
+      },
+      metadata: {
+        type: 'release_purchase',
+        releaseId,
+        collectorUserId,
+        creatorUserId: release.creatorId,
+      },
+    },
+    metadata: {
+      type: 'release_purchase',
+      releaseId,
+      collectorUserId,
+      creatorUserId: release.creatorId,
+    },
+  });
+
+  if (!session.url) throw new Error('Failed to create checkout session');
+  return { url: session.url, sessionId: session.id };
+}
+
+async function recordReleasePurchase(session: Stripe.Checkout.Session): Promise<void> {
+  if (session.metadata?.type !== 'release_purchase') return;
+  const releaseId = session.metadata.releaseId;
+  const collectorUserId = session.metadata.collectorUserId;
+  if (!releaseId || !collectorUserId) return;
+
+  if (!isDatabaseConfigured()) return;
+
+  const { getPrisma } = await import('../lib/prisma.js');
+  const db = await getPrisma();
+
+  const release = await db.release.findUnique({ where: { id: releaseId } });
+  if (!release) return;
+
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id;
+
+  await db.purchase.upsert({
+    where: {
+      collectorId_releaseId: {
+        collectorId: collectorUserId,
+        releaseId,
+      },
+    },
+    create: {
+      collectorId: collectorUserId,
+      releaseId,
+      stripePaymentId: paymentIntentId ?? session.id,
+      amountCents: session.amount_total ?? release.priceCents,
+    },
+    update: {
+      stripePaymentId: paymentIntentId ?? session.id,
+    },
+  });
+}
+
 export async function handleStripeWebhook(
   rawBody: Buffer,
   signature: string
@@ -158,6 +286,14 @@ export async function handleStripeWebhook(
         account.charges_enabled ?? false,
         account.payouts_enabled ?? false
       );
+    }
+    return;
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    if (session.payment_status === 'paid') {
+      await recordReleasePurchase(session);
     }
   }
 }

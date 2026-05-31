@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type {
   CreateDonationCheckoutRequest,
   CreateCheckoutResponse,
+  CreateReleaseCheckoutRequest,
 } from '@mintmusic/shared';
 import type { AuthedRequest } from '../middleware/internal-auth.js';
 import { requireInternalUser } from '../middleware/internal-auth.js';
@@ -9,6 +10,7 @@ import { isStripeConfigured } from '../config.js';
 import {
   createConnectOnboardingLink,
   createDonationCheckout,
+  createReleaseCheckout,
   refreshConnectStatus,
 } from '../services/stripe.js';
 import { findUserById } from '../store/users.js';
@@ -89,3 +91,36 @@ stripeRouter.post('/checkout/donation', async (req, res) => {
     res.status(400).json({ error: message });
   }
 });
+
+/** Release purchase checkout — collector buys a published release */
+stripeRouter.post(
+  '/checkout/release',
+  requireInternalUser,
+  async (req: AuthedRequest, res) => {
+    if (!isStripeConfigured()) {
+      res.status(503).json({ error: 'Stripe not configured' });
+      return;
+    }
+
+    const body = req.body as CreateReleaseCheckoutRequest;
+    if (!body?.releaseId || !body?.successUrl || !body?.cancelUrl) {
+      res.status(400).json({ error: 'releaseId, successUrl, and cancelUrl are required' });
+      return;
+    }
+
+    try {
+      const result = await createReleaseCheckout(
+        req.userId!,
+        body.releaseId,
+        body.successUrl,
+        body.cancelUrl
+      );
+      const response: CreateCheckoutResponse = result;
+      res.json(response);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Checkout failed';
+      const status = message.includes('already own') ? 409 : 400;
+      res.status(status).json({ error: message });
+    }
+  }
+);

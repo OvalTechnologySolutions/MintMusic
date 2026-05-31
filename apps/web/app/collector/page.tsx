@@ -1,5 +1,7 @@
 import AppHeader from '../components/AppHeader';
 import FanView from '../components/FanView';
+import DiscoverStore from '../components/collector/DiscoverStore';
+import MyCollection from '../components/collector/MyCollection';
 import Web3Provider from '@/components/Web3Provider';
 
 export default function CollectorPage() {
@@ -14,7 +16,11 @@ export default function CollectorPage() {
           </p>
         </div>
         <Web3Provider>
-          <FanView />
+          <div className="space-y-8">
+            <DiscoverStore />
+            <MyCollection />
+            <FanView />
+          </div>
         </Web3Provider>
       </main>
     </div>
