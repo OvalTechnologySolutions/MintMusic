@@ -11,6 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:approve-creator": "tsx prisma/approve-creator.ts",
+    "db:seed-demo-release": "tsx prisma/seed-demo-release.ts",
     "db:migrate-users": "tsx prisma/migrate-json-users.ts",
     "db:studio": "prisma studio",
     "worker": "tsx src/workers/index.ts"

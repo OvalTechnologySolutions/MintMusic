@@ -4,6 +4,39 @@ import GitHub from 'next-auth/providers/github';
 import type { CreatorStatus, UserRole } from '@mintmusic/shared';
 import { webConfig } from './lib/config';
 
+async function syncUserWithApi(payload: {
+  email: string;
+  name: string;
+  image?: string | null;
+  provider: string;
+  providerAccountId: string;
+}): Promise<{ id: string; role: UserRole; creatorStatus: CreatorStatus } | null> {
+  const appBase = (process.env.AUTH_URL ?? webConfig.appUrl).replace(/\/$/, '');
+
+  try {
+    const res = await fetch(`${appBase}/api/auth/sync-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('[auth] sync-user failed:', res.status, err);
+      return null;
+    }
+
+    const data = (await res.json()) as {
+      user: { id: string; role: UserRole; creatorStatus: CreatorStatus };
+    };
+    return data.user;
+  } catch (err) {
+    console.error('[auth] sync-user error:', err);
+    return null;
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -24,30 +57,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account }) {
       if (!account?.provider || !user.email) return false;
 
-      try {
-        const res = await fetch(`${webConfig.apiUrl}/v1/auth/oauth`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: user.email,
-            name: user.name ?? user.email,
-            image: user.image,
-            provider: account.provider,
-            providerAccountId: account.providerAccountId ?? account.id,
-          }),
-        });
+      const synced = await syncUserWithApi({
+        email: user.email,
+        name: user.name ?? user.email,
+        image: user.image,
+        provider: account.provider,
+        providerAccountId: account.providerAccountId ?? account.id,
+      });
 
-        if (!res.ok) return false;
+      if (!synced) return false;
 
-        const data = (await res.json()) as { user: { id: string; role: UserRole; creatorStatus: CreatorStatus } };
-        user.id = data.user.id;
-        (user as { role?: UserRole }).role = data.user.role;
-        (user as { creatorStatus?: CreatorStatus }).creatorStatus =
-          data.user.creatorStatus;
-        return true;
-      } catch {
-        return false;
-      }
+      user.id = synced.id;
+      (user as { role?: UserRole }).role = synced.role;
+      (user as { creatorStatus?: CreatorStatus }).creatorStatus =
+        synced.creatorStatus;
+      return true;
     },
     jwt({ token, user }) {
       if (user) {

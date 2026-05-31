@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { env as loadedEnv, isStripeConfigured as checkStripe } from './env.js';
 
 /** @deprecated Prefer importing from config/env.js */

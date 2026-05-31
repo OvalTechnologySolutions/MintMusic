@@ -12,14 +12,20 @@ authRouter.post('/oauth', async (req, res) => {
     return;
   }
 
-  const user = await upsertOAuthUser({
-    email: body.email,
-    name: body.name ?? body.email.split('@')[0],
-    image: body.image,
-    provider: body.provider,
-    providerAccountId: body.providerAccountId,
-  });
+  try {
+    const user = await upsertOAuthUser({
+      email: body.email,
+      name: body.name ?? body.email.split('@')[0],
+      image: body.image,
+      provider: body.provider,
+      providerAccountId: body.providerAccountId,
+    });
 
-  const response: OAuthSyncResponse = { user };
-  res.json(response);
+    const response: OAuthSyncResponse = { user };
+    res.json(response);
+  } catch (err) {
+    console.error('[auth/oauth] sync failed:', err);
+    const message = err instanceof Error ? err.message : 'OAuth sync failed';
+    res.status(500).json({ error: message });
+  }
 });

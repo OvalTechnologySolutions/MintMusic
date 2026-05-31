@@ -12,7 +12,10 @@
     "build:web": "npm run build -w @mintmusic/web",
     "build:api": "npm run build -w @mintmusic/api",
     "db:migrate": "npm run db:migrate -w @mintmusic/api",
+    "db:push": "npm run db:push -w @mintmusic/api",
     "db:seed": "npm run db:seed -w @mintmusic/api",
+    "db:approve-creator": "npm run db:approve-creator -w @mintmusic/api",
+    "db:seed-demo-release": "npm run db:seed-demo-release -w @mintmusic/api",
     "db:migrate-users": "npm run db:migrate-users -w @mintmusic/api",
     "worker": "npm run worker -w @mintmusic/api",
     "lint:web": "npm run lint -w @mintmusic/web"

@@ -5,11 +5,25 @@ import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
+const ERROR_MESSAGES: Record<string, string> = {
+  AccessDenied:
+    'Sign-in was denied. Usually the API is not running or could not save your profile. Start the API with npm run dev:api, then try again.',
+  Configuration:
+    'Auth is misconfigured. Check AUTH_SECRET and OAuth client IDs in apps/web/.env.local.',
+  OAuthSignin: 'Could not start OAuth sign-in. Check your Google/GitHub app settings.',
+  OAuthCallback: 'OAuth callback failed. Verify redirect URIs in Google Cloud Console.',
+  Default: 'Sign-in failed. Ensure npm run dev:api is running, then try again.',
+};
+
 export default function LoginForm() {
   const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') ?? '/collector';
+  const errorCode = searchParams.get('error');
+  const errorMessage = errorCode
+    ? ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default
+    : null;
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -27,6 +41,13 @@ export default function LoginForm() {
         Use OAuth to access your collector hub. Wallet connection is in Settings
         when you need on-chain features.
       </p>
+
+      {errorMessage && (
+        <div className="mb-6 rounded-xl border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="space-y-3">
         <button
           type="button"

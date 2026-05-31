@@ -2,6 +2,7 @@
  * Migrate legacy JSON users (apps/api/data/users.json) into PostgreSQL.
  * Run after DATABASE_URL is set: npm run db:migrate-users -w @mintmusic/api
  */
+import './load-env.js';
 import 'dotenv/config';
 import { exportAllUsers } from '../src/store/users-json.js';
 import { importJsonUser } from '../src/services/users-prisma.js';
