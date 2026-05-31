@@ -2,13 +2,9 @@ import {
   SOCIAL_PLATFORM_META,
   type SocialPlatform,
 } from './platforms';
+import type { SocialLinkInput } from './link';
 
-export interface SocialLinkInput {
-  platform: SocialPlatform;
-  url: string;
-  label?: string;
-  isPrimary?: boolean;
-}
+export type { SocialLinkInput };
 
 export interface ValidationResult {
   valid: boolean;
@@ -20,6 +16,10 @@ function normalizeUrl(raw: string): string {
   if (!trimmed) return '';
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://${trimmed}`;
+}
+
+export function normalizeSocialUrl(raw: string): string {
+  return normalizeUrl(raw);
 }
 
 export function validateSocialLink(link: SocialLinkInput): ValidationResult {

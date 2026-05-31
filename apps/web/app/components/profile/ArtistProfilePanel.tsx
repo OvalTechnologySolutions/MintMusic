@@ -1,60 +1,49 @@
 'use client';
 
-import { useAccount } from 'wagmi';
 import { useCallback, useEffect, useState } from 'react';
-import type { ArtistProfile, SocialLinkInput } from '@mintmusic/shared';
-import { getArtistProfile, updateArtistProfile } from '@/lib/api/artists';
-import { ApiError } from '@/lib/api/client';
+import type { SocialLinkInput } from '@mintmusic/shared';
 import SocialLinksDisplay from './SocialLinksDisplay';
 import SocialLinksEditor from './SocialLinksEditor';
 
 export default function ArtistProfilePanel() {
-  const { address, isConnected } = useAccount();
-  const [profile, setProfile] = useState<ArtistProfile | null>(null);
+  const [storedLinks, setStoredLinks] = useState<
+    Array<SocialLinkInput & { id: string; connectionType?: string }>
+  >([]);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
 
   const loadProfile = useCallback(async () => {
-    if (!address) return;
     setLoading(true);
     setApiError(null);
     try {
-      const { profile: data } = await getArtistProfile(address);
-      setProfile(data);
+      const res = await fetch('/api/users/me');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Failed to load');
+      const socialLinks = data.user?.socialLinks ?? [];
+      setStoredLinks(socialLinks);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 0) {
-        setApiError('API unreachable. Start the server with npm run dev:api');
-      } else {
-        setApiError(err instanceof Error ? err.message : 'Failed to load profile');
-      }
+      setApiError(err instanceof Error ? err.message : 'Failed to load profile');
     } finally {
       setLoading(false);
     }
-  }, [address]);
+  }, []);
 
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
 
-  const handleSaveLinks = async (links: SocialLinkInput[]) => {
-    if (!address) return;
-    const { profile: updated } = await updateArtistProfile(address, {
-      socialLinks: links,
-      displayName: profile?.displayName,
-      bio: profile?.bio,
+  const handleSaveLinks = async (inputs: SocialLinkInput[]) => {
+    const res = await fetch('/api/users/me', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ socialLinks: inputs }),
     });
-    setProfile(updated);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? 'Save failed');
+    setStoredLinks(data.user.socialLinks ?? []);
     setEditing(false);
   };
-
-  if (!isConnected || !address) {
-    return (
-      <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700 text-gray-400 text-sm">
-        Connect your wallet to manage your artist hub and social links.
-      </div>
-    );
-  }
 
   return (
     <div className="bg-gray-800/50 rounded-2xl p-8 border border-gray-700 mb-8">
@@ -62,7 +51,7 @@ export default function ArtistProfilePanel() {
         <div>
           <h2 className="text-2xl font-bold text-white">Artist Hub</h2>
           <p className="text-gray-400 text-sm mt-1">
-            Your public links for fans, brands, and industry discovery
+            Public social & streaming links for fans, brands, and discovery
           </p>
         </div>
         {!editing && (
@@ -86,16 +75,17 @@ export default function ArtistProfilePanel() {
         <p className="text-gray-400 text-sm">Loading profile…</p>
       ) : editing ? (
         <SocialLinksEditor
-          initialLinks={profile?.socialLinks.map((l) => ({
+          initialLinks={storedLinks.map((l) => ({
             platform: l.platform,
             url: l.url,
             label: l.label,
             isPrimary: l.isPrimary,
           }))}
           onSave={handleSaveLinks}
+          onCancel={() => setEditing(false)}
         />
       ) : (
-        <SocialLinksDisplay links={profile?.socialLinks ?? []} />
+        <SocialLinksDisplay links={storedLinks as never} showEmptyHint />
       )}
     </div>
   );

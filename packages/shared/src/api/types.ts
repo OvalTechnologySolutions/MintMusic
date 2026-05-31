@@ -6,7 +6,7 @@ export interface ApiErrorBody {
 }
 
 export interface HealthResponse {
-  status: 'ok';
+  status: 'ok' | 'degraded';
   version: string;
   service: 'mintmusic-api';
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import MyMints from './MyMints';
 
 export default function FanView() {

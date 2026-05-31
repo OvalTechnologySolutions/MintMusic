@@ -16,6 +16,8 @@ typechain-types/
 # Environment files
 .env
 .env.local
+apps/api/data/*.json
+!apps/api/data/.gitkeep
 .env.development.local
 .env.test.local
 .env.production.local

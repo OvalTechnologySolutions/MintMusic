@@ -1,3 +1,5 @@
+'use client';
+
 import { useAccount, useReadContracts } from 'wagmi';
 import MintMusicABI from '../../abis/MintMusic.json';
 import AlbumCard from './AlbumCard';

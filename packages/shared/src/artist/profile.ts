@@ -1,13 +1,6 @@
-import type { SocialLinkInput } from '../social/validate';
+import type { SocialLink, SocialLinkInput } from '../social/link';
 
-export type UserRole = 'artist' | 'fan' | 'brand';
-
-/** Stored social link (validated, persisted) */
-export interface SocialLink extends SocialLinkInput {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { SocialLink, SocialLinkInput };
 
 export interface ArtistProfile {
   walletAddress: string;

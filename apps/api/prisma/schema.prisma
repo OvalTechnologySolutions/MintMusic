@@ -1,0 +1,417 @@
+// MintMusic Backend v2 — PostgreSQL schema
+// Run: npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  collector
+  creator
+}
+
+enum CreatorStatus {
+  none
+  pending
+  approved
+  rejected
+}
+
+enum ReleaseType {
+  single
+  album
+  music_video
+  visualizer
+}
+
+enum MediaFormat {
+  mp3
+  wav
+  mp4
+}
+
+enum MediaProcessingStatus {
+  pending
+  processing
+  ready
+  failed
+}
+
+enum PostType {
+  announcement
+  release
+  behind_the_scenes
+  listening_party
+}
+
+enum DiscoveryChannelType {
+  genre
+  mood
+  regional
+  editorial
+}
+
+enum TastePlatform {
+  spotify
+  apple_music
+  soundcloud
+  tiktok
+}
+
+enum RadioOptInStatus {
+  pending
+  active
+  paused
+  rejected
+}
+
+enum DrmPackagingStatus {
+  none
+  queued
+  packaging
+  ready
+  failed
+}
+
+enum BroadcastLicenseType {
+  mechanical
+  performance
+  sync
+  blanket
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  image     String?
+  role      UserRole @default(collector)
+  creatorStatus CreatorStatus @default(none) @map("creator_status")
+  walletAddress String? @map("wallet_address")
+  stripeConnectAccountId String? @map("stripe_connect_account_id")
+  stripeConnectChargesEnabled Boolean @default(false) @map("stripe_charges_enabled")
+  stripeConnectPayoutsEnabled Boolean @default(false) @map("stripe_payouts_enabled")
+  provider  String
+  providerAccountId String @map("provider_account_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  socialLinks       SocialLink[]
+  creatorProfile    CreatorProfile?
+  mediaAssets       MediaAsset[]
+  releases          Release[]
+  posts             Post[]
+  followers         Follow[]       @relation("CreatorFollows")
+  following         Follow[]       @relation("CollectorFollows")
+  purchases         Purchase[]
+  playEvents        PlayEvent[]
+  radioOptIns       RadioOptIn[]
+  tasteConnections  TasteConnection[]
+  tasteProfile      TasteProfile?
+  playbackSessions  PlaybackSession[]
+
+  @@map("users")
+}
+
+model SocialLink {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  platform         String
+  url              String
+  label            String?
+  isPrimary        Boolean  @default(false) @map("is_primary")
+  connectionType   String   @default("manual") @map("connection_type")
+  externalAccountId String? @map("external_account_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@map("social_links")
+}
+
+model CreatorProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  displayName String   @map("display_name")
+  bio         String?
+  genreTags   String[] @default([]) @map("genre_tags")
+  regionCode  String?  @map("region_code")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("creator_profiles")
+}
+
+model MediaAsset {
+  id              String                @id @default(cuid())
+  creatorId       String                @map("creator_id")
+  filename        String
+  mimeType        String                @map("mime_type")
+  format          MediaFormat
+  byteSize        BigInt                @map("byte_size")
+  durationMs      Int?                  @map("duration_ms")
+  storageKey      String                @map("storage_key")
+  streamKey       String?               @map("stream_key")
+  processingStatus MediaProcessingStatus @default(pending) @map("processing_status")
+  checksumSha256  String?               @map("checksum_sha256")
+  drmStatus       DrmPackagingStatus    @default(none) @map("drm_status")
+  contentKeyId    String?               @map("content_key_id")
+  hlsManifestKey  String?               @map("hls_manifest_key")
+  dashManifestKey String?               @map("dash_manifest_key")
+  widevineReady   Boolean               @default(false) @map("widevine_ready")
+  fairplayReady   Boolean               @default(false) @map("fairplay_ready")
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+
+  creator User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  releases Release[]
+  tracks   Track[]
+  drmJobs  DrmPackagingJob[]
+
+  @@index([creatorId])
+  @@map("media_assets")
+}
+
+model Release {
+  id          String      @id @default(cuid())
+  creatorId   String      @map("creator_id")
+  mediaAssetId String?    @map("media_asset_id")
+  type        ReleaseType
+  title       String
+  description String?
+  coverUrl    String?     @map("cover_url")
+  genreTags   String[]    @default([]) @map("genre_tags")
+  priceCents  Int         @map("price_cents")
+  currency    String      @default("usd")
+  published   Boolean     @default(false)
+  publishedAt DateTime?   @map("published_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  creator    User        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  mediaAsset MediaAsset? @relation(fields: [mediaAssetId], references: [id])
+  tracks     Track[]
+  purchases  Purchase[]
+  posts      Post[]
+  playEvents PlayEvent[]
+
+  @@index([creatorId, published])
+  @@index([type])
+  @@map("releases")
+}
+
+model Track {
+  id           String @id @default(cuid())
+  releaseId    String @map("release_id")
+  title        String
+  trackNumber  Int    @map("track_number")
+  durationMs   Int?   @map("duration_ms")
+  mediaAssetId String @map("media_asset_id")
+
+  release    Release    @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id])
+
+  @@unique([releaseId, trackNumber])
+  @@map("tracks")
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  creatorId String   @map("creator_id")
+  type      PostType @default(announcement)
+  body      String
+  releaseId String?  @map("release_id")
+  mediaUrl  String?  @map("media_url")
+  publishedAt DateTime @default(now()) @map("published_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  creator User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  release Release? @relation(fields: [releaseId], references: [id], onDelete: SetNull)
+
+  @@index([creatorId, publishedAt(sort: Desc)])
+  @@map("posts")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  collectorId String   @map("collector_id")
+  creatorId   String   @map("creator_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  collector User @relation("CollectorFollows", fields: [collectorId], references: [id], onDelete: Cascade)
+  creator   User @relation("CreatorFollows", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([collectorId, creatorId])
+  @@index([collectorId])
+  @@map("follows")
+}
+
+model Purchase {
+  id              String   @id @default(cuid())
+  collectorId     String   @map("collector_id")
+  releaseId       String   @map("release_id")
+  stripePaymentId String?  @map("stripe_payment_id")
+  amountCents     Int      @map("amount_cents")
+  purchasedAt     DateTime @default(now()) @map("purchased_at")
+
+  collector User    @relation(fields: [collectorId], references: [id], onDelete: Cascade)
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@unique([collectorId, releaseId])
+  @@index([collectorId])
+  @@map("purchases")
+}
+
+model PlayEvent {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  releaseId   String   @map("release_id")
+  source      String   // collection | discovery | radio | feed
+  deviceType  String?  @map("device_type")
+  regionCode  String?  @map("region_code")
+  listenedMs  Int      @default(0) @map("listened_ms")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@index([releaseId, createdAt])
+  @@index([userId, createdAt])
+  @@map("play_events")
+}
+
+model DiscoveryChannel {
+  id          String               @id @default(cuid())
+  slug        String               @unique
+  name        String
+  description String?
+  type        DiscoveryChannelType
+  genreTags   String[]             @default([]) @map("genre_tags")
+  regionCode  String?              @map("region_code")
+  active      Boolean              @default(true)
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  radioRotations RadioRotation[]
+
+  @@map("discovery_channels")
+}
+
+model RadioOptIn {
+  id          String           @id @default(cuid())
+  creatorId   String           @map("creator_id")
+  releaseId   String           @map("release_id")
+  regionCode  String           @map("region_code")
+  status      RadioOptInStatus @default(active)
+  licensedAt  DateTime?        @map("licensed_at")
+  optedInAt   DateTime         @default(now()) @map("opted_in_at")
+
+  creator User @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseId, regionCode])
+  @@index([regionCode, status])
+  @@map("radio_opt_ins")
+}
+
+model RadioRotation {
+  id        String   @id @default(cuid())
+  channelId String   @map("channel_id")
+  releaseId String   @map("release_id")
+  weight    Int      @default(1)
+  startsAt  DateTime @map("starts_at")
+  endsAt    DateTime? @map("ends_at")
+
+  channel DiscoveryChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, startsAt])
+  @@map("radio_rotations")
+}
+
+model TasteConnection {
+  id              String        @id @default(cuid())
+  userId          String        @map("user_id")
+  platform        TastePlatform
+  accessTokenEnc  String        @map("access_token_enc")
+  refreshTokenEnc String?       @map("refresh_token_enc")
+  expiresAt       DateTime?     @map("expires_at")
+  scopes          String[]      @default([])
+  connectedAt     DateTime      @default(now()) @map("connected_at")
+  lastSyncedAt    DateTime?     @map("last_synced_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@map("taste_connections")
+}
+
+model TasteProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique @map("user_id")
+  topGenres    Json     @default("[]") @map("top_genres")
+  topArtists   Json     @default("[]") @map("top_artists")
+  topTracks    Json     @default("[]") @map("top_tracks")
+  sourceSummary Json    @default("{}") @map("source_summary")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("taste_profiles")
+}
+
+model PlaybackSession {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  releaseId  String   @map("release_id")
+  trackId    String?  @map("track_id")
+  drmSystem  String?  @map("drm_system")
+  tokenHash  String   @map("token_hash")
+  expiresAt  DateTime @map("expires_at")
+  deviceHint String?  @map("device_hint")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([userId, releaseId])
+  @@map("playback_sessions")
+}
+
+model BroadcastLicense {
+  id           String               @id @default(cuid())
+  regionCode   String               @map("region_code")
+  name         String
+  licenseType  BroadcastLicenseType @map("license_type")
+  rightsHolder String               @map("rights_holder")
+  territories  String[]             @default([])
+  validFrom    DateTime             @map("valid_from")
+  validTo      DateTime?            @map("valid_to")
+  documentUrl  String?              @map("document_url")
+  active       Boolean              @default(true)
+  createdAt    DateTime             @default(now()) @map("created_at")
+
+  @@index([regionCode, active])
+  @@map("broadcast_licenses")
+}
+
+model DrmPackagingJob {
+  id           String             @id @default(cuid())
+  mediaAssetId String             @map("media_asset_id")
+  status       DrmPackagingStatus @default(queued)
+  provider     String             @default("aws_mediaconvert")
+  errorMessage String?            @map("error_message")
+  queuedAt     DateTime           @default(now()) @map("queued_at")
+  completedAt  DateTime?          @map("completed_at")
+
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@index([mediaAssetId, status])
+  @@map("drm_packaging_jobs")
+}

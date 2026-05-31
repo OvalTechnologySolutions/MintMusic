@@ -1,12 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 
-interface LandingPageProps {
-  onEnterApp: () => void;
-}
-
-export default function LandingPage({ onEnterApp }: LandingPageProps) {
+export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white overflow-x-hidden">
       {/* Navigation */}
@@ -17,12 +13,12 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             <a href="#about" className="text-gray-400 hover:text-white transition-colors text-sm">About</a>
             <a href="#features" className="text-gray-400 hover:text-white transition-colors text-sm">Features</a>
             <a href="#creators" className="text-gray-400 hover:text-white transition-colors text-sm">For Creators</a>
-            <button 
-              onClick={onEnterApp}
+            <Link
+              href="/login"
               className="bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-2 rounded-full transition-all hover:scale-105"
             >
-              Launch App
-            </button>
+              Sign in
+            </Link>
           </div>
         </div>
       </nav>
@@ -42,12 +38,12 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             MintMusic connects artists directly with fans through blockchain-verified ownership. No middlemen. No streaming royalties. Just pure, direct support.
           </p>
           <div className="flex gap-4 justify-center animate-fade-in-up stagger-3">
-            <button 
-              onClick={onEnterApp}
+            <Link
+              href="/login"
               className="bg-green-500 hover:bg-green-400 text-black font-bold px-8 py-4 rounded-full transition-all hover:scale-105 animate-pulse-glow"
             >
               Start Collecting
-            </button>
+            </Link>
             <a 
               href="#about"
               className="border border-gray-600 hover:border-white text-white font-bold px-8 py-4 rounded-full transition-all hover:bg-white/10"
@@ -210,12 +206,12 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
                 </div>
               </div>
               
-              <button 
-                onClick={onEnterApp}
-                className="bg-white hover:bg-green-400 text-black font-bold px-8 py-4 rounded-full transition-all hover:scale-105"
+              <Link
+                href="/creator/apply"
+                className="inline-block bg-white hover:bg-green-400 text-black font-bold px-8 py-4 rounded-full transition-all hover:scale-105"
               >
-                Start Creating
-              </button>
+                Apply as Creator
+              </Link>
             </div>
           </div>
         </div>
@@ -229,12 +225,12 @@ export default function LandingPage({ onEnterApp }: LandingPageProps) {
             Join the revolution in music ownership. Whether you're an artist or a collector, 
             the future of sound starts here.
           </p>
-          <button 
-            onClick={onEnterApp}
-            className="bg-green-500 hover:bg-green-400 text-black font-bold px-12 py-5 rounded-full text-lg transition-all hover:scale-105 animate-pulse-glow"
+          <Link
+            href="/login"
+            className="inline-block bg-green-500 hover:bg-green-400 text-black font-bold px-12 py-5 rounded-full text-lg transition-all hover:scale-105 animate-pulse-glow"
           >
             Enter MintMusic
-          </button>
+          </Link>
         </div>
       </section>
 

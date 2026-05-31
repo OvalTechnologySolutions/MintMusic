@@ -21,17 +21,35 @@ MintMusic/
 ## Quick start
 
 ```bash
-# Install all workspaces
 npm install
 
-# Terminal 1 — API
+# API
 cp apps/api/.env.example apps/api/.env
-npm run dev:api
+# Set INTERNAL_API_SECRET and Stripe keys (test mode)
 
-# Terminal 2 — Web
-cp apps/web/.env.example apps/web/.env.local
-npm run dev:web
+# Web — copy env.local.example → .env.local
+cp apps/web/env.local.example apps/web/.env.local
+# Set AUTH_SECRET, OAuth client IDs, INTERNAL_API_SECRET (match API)
+
+npm run dev:api   # :4000
+cd apps/web && npm run dev -- -H 127.0.0.1   # :3000
 ```
+
+### Auth flow
+
+| Route | Purpose |
+|-------|---------|
+| `/login` | OAuth sign-in (Google, GitHub) for **collectors** |
+| `/collector` | Main hub (protected) |
+| `/creator/apply` | Creator interest form (separate onboarding) |
+| `/creator/dashboard` | Approved creators only |
+| `/settings` | Account, **wallet** (RainbowKit), Stripe payouts |
+
+Wallet connect is **not** on the login page — use **Settings → Wallet**.
+
+### Approve creators (early access)
+
+Until an admin UI exists, set `creatorStatus` to `approved` and `role` to `creator` in `apps/api/data/users.json`, then restart the API.
 
 - Web: http://localhost:3000  
 - API: http://localhost:4000 (health: `/health`)

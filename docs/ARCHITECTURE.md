@@ -15,8 +15,11 @@
 |--------|------|--------|
 | GET | `/health` | Live |
 | GET | `/capabilities` | Live (feature flags) |
-| GET | `/v1/artists/:wallet/profile` | Live (in-memory store) |
-| PUT | `/v1/artists/:wallet/profile` | Live (SIWE pending) |
+| GET | `/v1/users/me` | Live (auth) |
+| PATCH | `/v1/users/me` | Live — wallet, social links |
+| GET | `/v1/users/:id/public` | Live — public profile + links |
+| GET | `/v1/social/providers` | Live — OAuth integration status |
+| POST | `/v1/social/connect/:platform` | Live — manual / future OAuth |
 
 ### Planned routes
 
@@ -31,11 +34,22 @@ GET    /v1/brands/opportunities   # Sponsorship posts
 
 ## Social links data model
 
-Defined in `packages/shared/src/artist/profile.ts`:
+Defined in `packages/shared/src/social/`:
 
-- One link per platform per artist (validated hostnames per platform)
-- Optional `isPrimary` for hub CTA
-- Persisted via API today; Postgres schema to mirror `ArtistProfile` in Phase A
+| Platform | ID |
+|----------|-----|
+| Instagram | `instagram` |
+| YouTube | `youtube` |
+| TikTok | `tiktok` |
+| Spotify | `spotify` |
+| Apple Music | `apple_music` |
+| SoundCloud | `soundcloud` |
+
+- Stored on `User.socialLinks` (JSON file today)
+- `connectionType`: `manual` (URL) or `oauth` (when platform APIs ship)
+- Validated hostnames per platform; optional `isPrimary`
+- UI: **Settings → Social & Streaming** and **Creator Studio → Artist Hub**
+- Public read: `GET /v1/users/:id/public`
 
 ## Web ↔ API
 
