@@ -43,3 +43,16 @@ coverage/
 # Misc
 *.log
 
+# Agent / IDE (local only)
+.agents/
+.claude/
+skills-lock.json
+
+# Accidental nested clone
+apps/web/MintMusic/
+
+# Root-level Prisma experiments (canonical schema: apps/api/prisma/)
+/prisma/
+/prisma.config.ts
+
+/generated/prisma
