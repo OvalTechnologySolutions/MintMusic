@@ -57,3 +57,5 @@ apps/web/MintMusic/
 
 /generated/prisma
 .neon
+.vercel
+.env*

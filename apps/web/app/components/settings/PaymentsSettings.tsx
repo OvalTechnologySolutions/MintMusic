@@ -21,7 +21,23 @@ export default function PaymentsSettings() {
   };
 
   useEffect(() => {
-    loadStatus();
+    let cancelled = false;
+    fetch('/api/stripe/connect/status')
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        if (d.error) setError(d.error);
+        else setStatus(d);
+      })
+      .catch(() => {
+        if (!cancelled) setError('Failed to load status');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const startOnboarding = async () => {

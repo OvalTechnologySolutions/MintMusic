@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Nested local clone — not part of the web app source
+    "MintMusic/**",
+    "**/dist/**",
   ]),
 ]);
 

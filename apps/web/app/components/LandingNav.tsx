@@ -20,24 +20,24 @@ export default function LandingNav() {
           >
             Discover
           </Link>
-          <a
+          <Link
             href="/#about"
             className="text-gray-400 hover:text-white transition-colors text-sm hidden sm:inline"
           >
             About
-          </a>
-          <a
+          </Link>
+          <Link
             href="/#features"
             className="text-gray-400 hover:text-white transition-colors text-sm hidden sm:inline"
           >
             Features
-          </a>
-          <a
+          </Link>
+          <Link
             href="/#creators"
             className="text-gray-400 hover:text-white transition-colors text-sm hidden md:inline"
           >
             For Creators
-          </a>
+          </Link>
           {isAuthed ? (
             <>
               <Link

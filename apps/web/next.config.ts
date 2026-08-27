@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@mintmusic/shared'],
+  turbopack: {
+    root: '../..',
+  },
   images: {
     remotePatterns: [
       {

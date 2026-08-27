@@ -54,12 +54,12 @@ export default function LandingPage() {
               <span className="text-green-400 text-sm font-bold tracking-widest uppercase mb-4 block">About MintMusic</span>
               <h2 className="text-5xl font-bold mb-6">Music Ownership, <span className="gradient-text">Reimagined</span></h2>
               <p className="text-gray-400 text-lg mb-6 leading-relaxed">
-                For too long, streaming platforms have taken the lion's share while artists struggle to make ends meet. 
+                For too long, streaming platforms have taken the lion&apos;s share while artists struggle to make ends meet.
                 MintMusic flips the script by enabling direct-to-fan sales through blockchain technology.
               </p>
               <p className="text-gray-400 text-lg leading-relaxed">
-                When you collect music on MintMusic, you're not just getting a file — you're owning a piece of art. 
-                Limited editions, exclusive access, and real ownership that can't be revoked.
+                When you collect music on MintMusic, you&apos;re not just getting a file — you&apos;re owning a piece of art.
+                Limited editions, exclusive access, and real ownership that can&apos;t be revoked.
               </p>
             </div>
             <div className="relative">
@@ -136,7 +136,7 @@ export default function LandingPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-3">Real Analytics</h3>
-              <p className="text-gray-400">See who's collecting, where they are, and how your music spreads—all in real-time.</p>
+              <p className="text-gray-400">See who&apos;s collecting, where they are, and how your music spreads—all in real-time.</p>
             </div>
           </div>
         </div>
@@ -207,7 +207,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <h2 className="text-5xl md:text-6xl font-bold mb-6">Ready to <span className="gradient-text">Mint</span>?</h2>
           <p className="text-xl text-gray-400 mb-10">
-            Join the revolution in music ownership. Whether you're an artist or a collector, 
+            Join the revolution in music ownership. Whether you&apos;re an artist or a collector,
             the future of sound starts here.
           </p>
           <Link
