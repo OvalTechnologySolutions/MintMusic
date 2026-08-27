@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { Request } from 'express';
 import { getPrisma } from '../../lib/prisma.js';
 import { asyncHandler, ensureDatabase } from '../../middleware/async-handler.js';
 import type { AuthedRequest } from '../../middleware/internal-auth.js';
@@ -7,6 +8,50 @@ import type { DiscoverStoreQuery, DiscoverStoreResponse } from '@mintmusic/share
 import { routeParam } from '../../lib/route-param.js';
 
 export const discoverRouter = Router();
+
+/** GET /v1/discover/store — public digital album store + search */
+discoverRouter.get(
+  '/store',
+  ensureDatabase,
+  asyncHandler(async (req: Request, res) => {
+    const q = req.query as DiscoverStoreQuery;
+    const db = await getPrisma();
+    const limit = Math.min(Number(q.limit ?? 24), 48);
+
+    const releases = await db.release.findMany({
+      where: {
+        published: true,
+        ...(q.genre ? { genreTags: { has: q.genre } } : {}),
+        ...(q.type ? { type: q.type } : {}),
+        ...(q.q
+          ? { title: { contains: q.q, mode: 'insensitive' } }
+          : {}),
+        ...(q.cursor ? { id: { lt: q.cursor } } : {}),
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: limit + 1,
+      include: { creator: { select: { name: true } } },
+    });
+
+    const hasMore = releases.length > limit;
+    const slice = hasMore ? releases.slice(0, limit) : releases;
+
+    const response: DiscoverStoreResponse = {
+      releases: slice.map((r) => ({
+        id: r.id,
+        title: r.title,
+        type: r.type,
+        creatorName: r.creator.name,
+        priceCents: r.priceCents,
+        coverUrl: r.coverUrl ?? undefined,
+        genreTags: r.genreTags,
+      })),
+      nextCursor: hasMore ? slice[slice.length - 1]?.id : undefined,
+    };
+
+    res.json(response);
+  })
+);
 
 discoverRouter.use(requireInternalUser, ensureDatabase);
 
@@ -47,48 +92,5 @@ discoverRouter.get(
     });
 
     res.json({ channel, rotation });
-  })
-);
-
-/** GET /v1/discover/store — digital album store + search */
-discoverRouter.get(
-  '/store',
-  asyncHandler(async (req: AuthedRequest, res) => {
-    const q = req.query as DiscoverStoreQuery;
-    const db = await getPrisma();
-    const limit = Math.min(Number(q.limit ?? 24), 48);
-
-    const releases = await db.release.findMany({
-      where: {
-        published: true,
-        ...(q.genre ? { genreTags: { has: q.genre } } : {}),
-        ...(q.type ? { type: q.type } : {}),
-        ...(q.q
-          ? { title: { contains: q.q, mode: 'insensitive' } }
-          : {}),
-        ...(q.cursor ? { id: { lt: q.cursor } } : {}),
-      },
-      orderBy: { publishedAt: 'desc' },
-      take: limit + 1,
-      include: { creator: { select: { name: true } } },
-    });
-
-    const hasMore = releases.length > limit;
-    const slice = hasMore ? releases.slice(0, limit) : releases;
-
-    const response: DiscoverStoreResponse = {
-      releases: slice.map((r) => ({
-        id: r.id,
-        title: r.title,
-        type: r.type,
-        creatorName: r.creator.name,
-        priceCents: r.priceCents,
-        coverUrl: r.coverUrl ?? undefined,
-        genreTags: r.genreTags,
-      })),
-      nextCursor: hasMore ? slice[slice.length - 1]?.id : undefined,
-    };
-
-    res.json(response);
   })
 );

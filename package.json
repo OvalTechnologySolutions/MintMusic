@@ -18,6 +18,14 @@
     "db:seed-demo-release": "npm run db:seed-demo-release -w @mintmusic/api",
     "db:migrate-users": "npm run db:migrate-users -w @mintmusic/api",
     "worker": "npm run worker -w @mintmusic/api",
-    "lint:web": "npm run lint -w @mintmusic/web"
+    "lint:web": "npm run lint -w @mintmusic/web",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@neon/config": "^1.0.5",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
+    "vitest": "^3.0.5"
   }
 }

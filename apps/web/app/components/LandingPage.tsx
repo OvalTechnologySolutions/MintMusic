@@ -1,27 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import LandingNav from './LandingNav';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white overflow-x-hidden">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold gradient-text">MintMusic</h1>
-          <div className="flex items-center gap-8">
-            <a href="#about" className="text-gray-400 hover:text-white transition-colors text-sm">About</a>
-            <a href="#features" className="text-gray-400 hover:text-white transition-colors text-sm">Features</a>
-            <a href="#creators" className="text-gray-400 hover:text-white transition-colors text-sm">For Creators</a>
-            <Link
-              href="/login"
-              className="bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-2 rounded-full transition-all hover:scale-105"
-            >
-              Sign in
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center relative pt-20">
@@ -39,17 +24,17 @@ export default function LandingPage() {
           </p>
           <div className="flex gap-4 justify-center animate-fade-in-up stagger-3">
             <Link
-              href="/login"
+              href="/discover"
               className="bg-green-500 hover:bg-green-400 text-black font-bold px-8 py-4 rounded-full transition-all hover:scale-105 animate-pulse-glow"
             >
-              Start Collecting
+              Discover Music
             </Link>
-            <a 
-              href="#about"
+            <Link
+              href="/login"
               className="border border-gray-600 hover:border-white text-white font-bold px-8 py-4 rounded-full transition-all hover:bg-white/10"
             >
-              Learn More
-            </a>
+              Sign in
+            </Link>
           </div>
         </div>
 
@@ -237,7 +222,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-gray-800">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-gray-500">© 2024 MintMusic. Decentralized Music Platform.</p>
+          <p className="text-gray-500">© 2026 MintMusic. Decentralized Music Platform.</p>
           <div className="flex gap-6 text-gray-500">
             <a href="#" className="hover:text-white transition-colors">Twitter</a>
             <a href="#" className="hover:text-white transition-colors">Discord</a>

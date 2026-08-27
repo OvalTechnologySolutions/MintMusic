@@ -14,8 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MintMusic",
-  description: "Decentralized Music Platform",
+  title: {
+    default: 'MintMusic — Own Your Sound',
+    template: '%s | MintMusic',
+  },
+  description:
+    'MintMusic connects artists directly with fans through blockchain-verified ownership. Discover, collect, and support independent music.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://mintmusic.ai'),
+  openGraph: {
+    siteName: 'MintMusic',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

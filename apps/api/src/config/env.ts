@@ -5,7 +5,19 @@ import { z } from 'zod';
 
 /** Always load apps/api/.env regardless of npm workspace cwd */
 const apiRoot = resolve(fileURLToPath(new URL('../..', import.meta.url)));
-loadDotenv({ path: resolve(apiRoot, '.env') });
+loadDotenv({ path: resolve(apiRoot, '.env'), override: false });
+
+/** Map Neon Object Storage env vars (AWS_*) to the app's S3_* names. */
+function neonStorageAliases(): Record<string, string | undefined> {
+  return {
+    S3_BUCKET: process.env.S3_BUCKET ?? 'uploads',
+    S3_REGION: process.env.S3_REGION ?? process.env.AWS_REGION,
+    S3_ENDPOINT: process.env.S3_ENDPOINT ?? process.env.AWS_ENDPOINT_URL_S3,
+    S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID ?? process.env.AWS_ACCESS_KEY_ID,
+    S3_SECRET_ACCESS_KEY:
+      process.env.S3_SECRET_ACCESS_KEY ?? process.env.AWS_SECRET_ACCESS_KEY,
+  };
+}
 
 /** Treat blank .env values as unset (Zod optional() alone still rejects ""). */
 function optionalString(minLength?: number) {
@@ -56,7 +68,7 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 export function loadEnv(): Env {
-  const parsed = envSchema.safeParse(process.env);
+  const parsed = envSchema.safeParse({ ...process.env, ...neonStorageAliases() });
   if (!parsed.success) {
     console.error('Invalid environment:', parsed.error.flatten().fieldErrors);
     throw new Error('Invalid environment configuration');

@@ -14,6 +14,12 @@ export default function AppHeader() {
         </Link>
         <nav className="flex items-center gap-6">
           <Link
+            href="/discover"
+            className="text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            Discover
+          </Link>
+          <Link
             href="/collector"
             className="text-sm text-gray-400 hover:text-white transition-colors"
           >
@@ -41,6 +47,12 @@ export default function AppHeader() {
           </Link>
           {session?.user && (
             <div className="flex items-center gap-3">
+              <Link
+                href={`/u/${session.user.id}`}
+                className="text-sm text-gray-400 hover:text-white transition-colors hidden sm:inline"
+              >
+                Profile
+              </Link>
               <span className="text-sm text-gray-500 hidden sm:inline">
                 {session.user.name ?? session.user.email}
               </span>

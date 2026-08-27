@@ -2,6 +2,24 @@ import 'server-only';
 import { auth } from '@/auth';
 import { webConfig } from './config';
 
+/** Unauthenticated server-side API call (public endpoints only) */
+export async function apiPublic<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${webConfig.apiUrl.replace(/\/$/, '')}${path}`, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...init?.headers,
+    },
+    cache: 'no-store',
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error ?? res.statusText);
+  }
+  return data as T;
+}
+
 export async function apiAsUser<T>(
   path: string,
   init?: RequestInit

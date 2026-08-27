@@ -56,3 +56,4 @@ apps/web/MintMusic/
 /prisma.config.ts
 
 /generated/prisma
+.neon
