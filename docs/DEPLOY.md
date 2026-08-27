@@ -35,9 +35,59 @@ For new dev branches: `neon checkout dev-<feature>` then `neon env pull --file a
 1. Create a Postgres database at [neon.tech](https://neon.tech) or Supabase.
 2. Copy the connection string → `DATABASE_URL`.
 
-## 2. API deployment
+## 2. API deployment (Railway)
 
-### Option A: Railway / Fly.io with Docker
+### Connect Neon to Railway
+
+After `neon link`, sync production env vars to Railway:
+
+```bash
+# 1. Log in and link your API service
+npm i -g @railway/cli
+railway login
+railway link          # select or create the MintMusic API service
+
+# 2. Preview vars (dry run)
+node scripts/sync-production-env.mjs
+
+# 3. Push Neon + app secrets to Railway
+node scripts/sync-production-env.mjs --apply
+```
+
+The sync script pulls fresh Neon credentials (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `AWS_*`) and combines them with app secrets already in `apps/api/.env` (`INTERNAL_API_SECRET`, Stripe keys, etc.).
+
+**Railway variables set automatically:**
+
+| Variable | Source |
+|----------|--------|
+| `DATABASE_URL` | Neon (pooled) |
+| `DATABASE_URL_UNPOOLED` | Neon (direct — for deploy migrations) |
+| `AWS_ACCESS_KEY_ID` | Neon Object Storage |
+| `AWS_SECRET_ACCESS_KEY` | Neon Object Storage |
+| `AWS_ENDPOINT_URL_S3` | Neon Object Storage |
+| `AWS_REGION` | Neon (`us-east-2`) |
+| `CORS_ORIGIN` | `https://mintmusic.ai` |
+| `WEB_URL` | `https://mintmusic.ai` |
+| `NODE_ENV` | `production` |
+| `INTERNAL_API_SECRET` | `apps/api/.env` |
+| `PLAYBACK_JWT_SECRET` | `apps/api/.env` |
+| `STRIPE_*` | `apps/api/.env` (if set) |
+
+Add a **deploy command** or Dockerfile start command in Railway:
+
+```bash
+npm run db:push -w @mintmusic/api && node apps/api/dist/index.js
+```
+
+Or use the Docker image:
+
+```bash
+docker build -f apps/api/Dockerfile -t mintmusic-api .
+```
+
+Set custom domain `api.mintmusic.ai` in Railway → Settings → Domains.
+
+### Option B: Fly.io / Docker (manual)
 
 ```bash
 # Build from repo root
@@ -66,9 +116,34 @@ PLAYBACK_JWT_SECRET=<openssl rand -base64 32>
 
 ## 3. Web deployment (Vercel)
 
+### Connect env vars to Vercel
+
+```bash
+npx vercel login
+npx vercel link       # import OvalTechnologySolutions/MintMusic, branch quickdeploy
+
+# Preview then apply web production vars
+node scripts/sync-production-env.mjs
+node scripts/sync-production-env.mjs --apply
+```
+
+Vercel does **not** need `DATABASE_URL` — the web app talks to the API at `api.mintmusic.ai`. The sync script sets:
+
+| Variable | Value |
+|----------|-------|
+| `AUTH_URL` | `https://mintmusic.ai` |
+| `NEXT_PUBLIC_APP_URL` | `https://mintmusic.ai` |
+| `NEXT_PUBLIC_API_URL` | `https://api.mintmusic.ai` |
+| `INTERNAL_API_SECRET` | Same as Railway API |
+| `AUTH_SECRET` | From `apps/web/.env.local` |
+| `GOOGLE_CLIENT_*` | From `apps/web/.env.local` |
+
+### Manual setup
+
 1. Import the GitHub repo at [vercel.com/new](https://vercel.com/new).
 2. Set **Root Directory** to repository root (uses `vercel.json`).
-3. Add environment variables:
+3. Deploy branch **`quickdeploy`**.
+4. Add environment variables:
 
 ```
 AUTH_SECRET=<openssl rand -base64 32>
