@@ -11,6 +11,8 @@
     "dev:api": "npm run dev -w @mintmusic/api",
     "build:web": "npm run build -w @mintmusic/web",
     "build:api": "npm run build -w @mintmusic/api",
+    "build": "npm run build:api",
+    "start": "node apps/api/dist/index.js",
     "db:migrate": "npm run db:migrate -w @mintmusic/api",
     "db:push": "npm run db:push -w @mintmusic/api",
     "db:seed": "npm run db:seed -w @mintmusic/api",
