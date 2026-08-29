@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MintMusic">
+  <defs>
+    <radialGradient id="mmkVinyl" cx="42%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#1a1a1d"/>
+      <stop offset="55%" stop-color="#101012"/>
+      <stop offset="100%" stop-color="#050506"/>
+    </radialGradient>
+    <linearGradient id="mmkLabel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7FE9BC"/>
+      <stop offset="100%" stop-color="#2FAE7A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- full-bleed onyx background for maskable safe zone -->
+  <rect width="512" height="512" fill="#0A0A0B"/>
+
+  <!-- vinyl body (scaled into ~80% safe area) -->
+  <g transform="translate(256 256) scale(0.8) translate(-256 -256)">
+    <circle cx="256" cy="256" r="248" fill="url(#mmkVinyl)"/>
+    <circle cx="256" cy="256" r="248" fill="none" stroke="#2FAE7A" stroke-width="10"/>
+    <g fill="none" stroke="#ffffff" stroke-opacity="0.06">
+      <circle cx="256" cy="256" r="222" stroke-width="2"/>
+      <circle cx="256" cy="256" r="196" stroke-width="2"/>
+      <circle cx="256" cy="256" r="170" stroke-width="2"/>
+      <circle cx="256" cy="256" r="144" stroke-width="2"/>
+    </g>
+    <circle cx="256" cy="256" r="104" fill="url(#mmkLabel)"/>
+    <circle cx="256" cy="256" r="9" fill="#0A0A0B"/>
+    <path d="M256 178 C 300 212 300 300 256 334 C 212 300 212 212 256 178 Z"
+          fill="#0A0A0B" fill-opacity="0.9"/>
+    <line x1="256" y1="190" x2="256" y2="322" stroke="#7FE9BC" stroke-width="3" stroke-linecap="round"/>
+    <g stroke="#7FE9BC" stroke-width="7" stroke-linecap="round">
+      <line x1="234" y1="270" x2="234" y2="242"/>
+      <line x1="245" y1="282" x2="245" y2="230"/>
+      <line x1="267" y1="284" x2="267" y2="228"/>
+      <line x1="278" y1="272" x2="278" y2="240"/>
+    </g>
+  </g>
+</svg>
