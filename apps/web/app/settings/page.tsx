@@ -28,15 +28,15 @@ function SettingsContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="app-screen">
       <AppHeader />
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="app-main max-w-3xl">
         <h1 className="text-3xl font-bold mb-2">Settings</h1>
         <p className="text-gray-400 mb-8">
           Manage your account, linked social profiles, wallet, and creator payouts.
         </p>
 
-        <div className="flex gap-2 mb-8 border-b border-gray-800">
+        <div className="scrollbar-hide -mx-4 mb-8 flex snap-x gap-1 overflow-x-auto border-b border-gray-800 px-4">
           {tabs
             .filter((t) => t.show)
             .map((t) => (
@@ -44,7 +44,7 @@ function SettingsContent() {
                 key={t.id}
                 type="button"
                 onClick={() => setTab(t.id)}
-                className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`min-w-max snap-start border-b-2 px-4 pb-3 text-sm font-medium transition-colors ${
                   tab === t.id
                     ? 'border-green-400 text-green-400'
                     : 'border-transparent text-gray-400 hover:text-white'
@@ -55,7 +55,7 @@ function SettingsContent() {
             ))}
         </div>
 
-        <div className="bg-gray-800/50 rounded-2xl p-8 border border-gray-700">
+        <div className="rounded-2xl border border-gray-700 bg-gray-800/50 p-4 sm:p-8">
           {tab === 'account' && <AccountSettings />}
           {tab === 'social' && <SocialLinksSettings />}
           {tab === 'wallet' && (
@@ -72,7 +72,7 @@ function SettingsContent() {
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-900" />}>
+    <Suspense fallback={<div className="min-h-svh bg-gray-900" />}>
       <SettingsContent />
     </Suspense>
   );

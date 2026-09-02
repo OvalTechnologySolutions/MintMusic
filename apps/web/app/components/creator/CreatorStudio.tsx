@@ -50,25 +50,25 @@ export default function CreatorStudio() {
       <ArtistProfilePanel />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <div className="rounded-xl border border-gray-700 bg-gray-800 p-4 sm:p-6">
           <p className="text-gray-400 text-sm mb-1">Total Releases</p>
           <p className="text-3xl font-bold text-white">0</p>
         </div>
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <div className="rounded-xl border border-gray-700 bg-gray-800 p-4 sm:p-6">
           <p className="text-gray-400 text-sm mb-1">Stripe revenue</p>
           <p className="text-3xl font-bold text-green-400">—</p>
         </div>
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <div className="rounded-xl border border-gray-700 bg-gray-800 p-4 sm:p-6">
           <p className="text-gray-400 text-sm mb-1">Collectors</p>
           <p className="text-3xl font-bold text-white">0</p>
         </div>
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <div className="rounded-xl border border-gray-700 bg-gray-800 p-4 sm:p-6">
           <p className="text-gray-400 text-sm mb-1">On-chain sales</p>
           <p className="text-3xl font-bold text-purple-400">0 ETH</p>
         </div>
       </div>
 
-      <div className="bg-gray-800/50 rounded-2xl p-8 border border-gray-700">
+      <div className="rounded-2xl border border-gray-700 bg-gray-800/50 p-4 sm:p-8">
         <h2 className="text-2xl font-bold mb-6">Create New Release</h2>
         <form onSubmit={createRelease} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">

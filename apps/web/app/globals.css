@@ -251,6 +251,122 @@ a {
   padding-block: 1.5rem calc(6.5rem + env(safe-area-inset-bottom));
 }
 
+.app-header {
+  position: sticky;
+  z-index: 50;
+  top: 0;
+  border-bottom: 1px solid #374151;
+  padding-top: env(safe-area-inset-top);
+  background: color-mix(in srgb, #111827 94%, transparent);
+}
+
+.app-header__inner {
+  display: flex;
+  width: min(100% - 2rem, 80rem);
+  min-height: 4rem;
+  margin-inline: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.app-header__link,
+.app-header__signout {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  border-radius: 0.65rem;
+  color: #D1D5DB;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.app-header__link[aria-current="page"] {
+  color: var(--mm-mint-soft);
+}
+
+.app-header__signout {
+  border: 1px solid #4B5563;
+  padding-inline: 0.9rem;
+  background: transparent;
+}
+
+.app-tabbar {
+  position: fixed;
+  z-index: 60;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-top: 1px solid #374151;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: color-mix(in srgb, var(--mm-onyx) 96%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.app-tabbar__inner {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.app-tabbar__item {
+  display: flex;
+  min-height: 4rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  color: #9CA3AF;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.app-tabbar__item--active {
+  color: var(--mm-mint-soft);
+}
+
+.app-tabbar__icon {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.mobile-menu-button {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--mm-paper) 32%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mm-white);
+  font-size: 1.2rem;
+}
+
+.landing-mobile-menu {
+  border-top: 1px solid var(--mm-charcoal);
+  background: var(--mm-onyx);
+}
+
+.landing-mobile-menu__link {
+  display: flex;
+  width: 100%;
+  min-height: 3rem;
+  align-items: center;
+  border: 0;
+  border-radius: 0.65rem;
+  padding-inline: 0.75rem;
+  background: transparent;
+  color: var(--mm-paper);
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.landing-mobile-menu__link:active {
+  background: color-mix(in srgb, var(--mm-mint) 14%, transparent);
+}
+
 .landing-nav--solid {
   border-color: var(--mm-charcoal);
   background: color-mix(in srgb, var(--mm-onyx) 94%, transparent);
