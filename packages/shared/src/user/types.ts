@@ -1,4 +1,4 @@
-import type { SocialLink, SocialLinkInput } from '../social/link';
+import type { SocialLink, SocialLinkInput } from '../social/link.js';
 
 export type UserRole = 'collector' | 'creator';
 
@@ -37,9 +37,6 @@ export interface UpdateUserRequest {
   walletAddress?: string | null;
   socialLinks?: SocialLinkInput[];
 }
-
-export type { SocialLink, SocialLinkInput } from '../social/link';
-export type { PublicUserProfile } from '../social/link';
 
 export interface CreatorApplication {
   id: string;

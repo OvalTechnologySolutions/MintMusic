@@ -1,4 +1,4 @@
-import type { ArtistProfile, ArtistProfileUpdate } from '../artist/profile';
+import type { ArtistProfile, ArtistProfileUpdate } from '../artist/profile.js';
 
 export interface ApiErrorBody {
   error: string;

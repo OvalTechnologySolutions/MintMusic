@@ -1,4 +1,4 @@
-import type { SocialPlatform } from './platforms';
+import type { SocialPlatform } from './platforms.js';
 
 /**
  * Platforms we plan to support via official OAuth (in addition to manual URLs).

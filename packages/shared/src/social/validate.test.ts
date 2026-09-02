@@ -3,7 +3,7 @@ import {
   normalizeSocialUrl,
   validateSocialLink,
   validateSocialLinks,
-} from './validate';
+} from './validate.js';
 
 describe('validateSocialLink', () => {
   it('accepts valid Spotify URLs', () => {
