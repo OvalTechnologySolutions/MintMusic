@@ -2,7 +2,8 @@
 
 Musician-first platform for direct fan engagement, professional marketplace tools, and MusicMoments community experiences.
 
-**Active branch:** `mintmusic2026`
+**Default branch target:** `main` (MintMusic 2026 monorepo — supersedes the legacy `backend/` / `frontend/` layout).  
+Also maintained: `quickdeploy` (same monorepo line used for Railway/Vercel deploys).
 
 ## Repository structure
 
