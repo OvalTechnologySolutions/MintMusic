@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate Prisma client
+        run: npm run db:generate -w @mintmusic/api
+
       - name: Lint web
         run: npm run lint:web
 
