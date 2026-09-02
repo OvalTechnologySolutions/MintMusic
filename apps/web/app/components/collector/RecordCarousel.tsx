@@ -67,9 +67,9 @@ export default function RecordCarousel({ items }: { items: RecordCarouselItem[] 
   }, [reportListen]);
 
   useEffect(() => {
+    const audio = audioRef.current;
     return () => {
       if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
-      const audio = audioRef.current;
       audio?.pause();
       if (loadedReleaseRef.current) reportListen(loadedReleaseRef.current);
     };
