@@ -2,13 +2,11 @@
 
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import MintMusicMark from './MintMusicMark';
 
 export default function LandingNav() {
   const { data: session, status } = useSession();
-  const pathname = usePathname();
   const isAuthed = status === 'authenticated' && session?.user;
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,10 +17,6 @@ export default function LandingNav() {
     window.addEventListener('scroll', updateNav, { passive: true });
     return () => window.removeEventListener('scroll', updateNav);
   }, []);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   return (
     <nav className={`landing-nav ${isScrolled || menuOpen ? 'landing-nav--solid' : ''}`} aria-label="Main navigation">
@@ -95,13 +89,13 @@ export default function LandingNav() {
         hidden={!menuOpen}
       >
         <div className="mm-shell grid gap-1 py-3">
-          <Link href="/#collections" className="landing-mobile-menu__link">Collections</Link>
-          <Link href="/#how-it-works" className="landing-mobile-menu__link">How it works</Link>
-          <Link href="/#for-artists" className="landing-mobile-menu__link">For artists</Link>
-          <Link href="/discover" className="landing-mobile-menu__link">Discover music</Link>
+          <Link onClick={() => setMenuOpen(false)} href="/#collections" className="landing-mobile-menu__link">Collections</Link>
+          <Link onClick={() => setMenuOpen(false)} href="/#how-it-works" className="landing-mobile-menu__link">How it works</Link>
+          <Link onClick={() => setMenuOpen(false)} href="/#for-artists" className="landing-mobile-menu__link">For artists</Link>
+          <Link onClick={() => setMenuOpen(false)} href="/discover" className="landing-mobile-menu__link">Discover music</Link>
           {isAuthed ? (
             <>
-              <Link href={`/u/${session.user.id}`} className="landing-mobile-menu__link">Your shelf</Link>
+              <Link onClick={() => setMenuOpen(false)} href={`/u/${session.user.id}`} className="landing-mobile-menu__link">Your shelf</Link>
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: '/' })}
