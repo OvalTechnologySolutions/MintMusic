@@ -382,6 +382,190 @@ a {
   background: color-mix(in srgb, var(--mm-mint) 14%, transparent);
 }
 
+.record-player {
+  margin-top: 1.25rem;
+}
+
+.record-player__toolbar,
+.record-player__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.record-player__arrows {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.record-player__arrows button {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #4B5563;
+  border-radius: 999px;
+  background: #111827;
+  color: var(--mm-white);
+  font-size: 1.15rem;
+}
+
+.record-player__arrows button:disabled {
+  opacity: 0.35;
+}
+
+.record-carousel {
+  display: flex;
+  margin-inline: -1rem;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 1.5rem max(1rem, calc((100% - min(78vw, 20rem)) / 2)) 1rem;
+  scroll-padding-inline: max(1rem, calc((100% - min(78vw, 20rem)) / 2));
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.record-carousel:focus-visible {
+  outline: 3px solid var(--mm-mint);
+  outline-offset: -3px;
+}
+
+.record-carousel__slide {
+  width: min(78vw, 20rem);
+  flex: 0 0 min(78vw, 20rem);
+  scroll-snap-align: center;
+  opacity: 0.6;
+  transform: scale(0.94);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.record-carousel__slide--active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.record-swipe-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: auto;
+  aspect-ratio: 1.08;
+  overflow: hidden;
+  border: 0;
+  border-radius: 1.1rem;
+  background: #111827;
+  box-shadow: 0 1.2rem 2.5rem rgb(0 0 0 / 28%);
+  text-align: left;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.record-swipe-card__disc {
+  position: absolute;
+  width: 78%;
+  right: -18%;
+  top: 9%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: drop-shadow(0 0.7rem 1rem rgb(0 0 0 / 45%));
+}
+
+.record-swipe-card__disc img,
+.record-swipe-card__sleeve > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.record-swipe-card__disc--playing {
+  animation: mm-play-spin 1.8s linear infinite;
+}
+
+.record-swipe-card__sleeve {
+  position: absolute;
+  z-index: 1;
+  width: 72%;
+  inset: 0 auto 0 0;
+  overflow: hidden;
+  border-right: 1px solid rgb(255 255 255 / 14%);
+  background: #263244;
+  box-shadow: 0.7rem 0 1.5rem rgb(0 0 0 / 35%);
+}
+
+.record-swipe-card__placeholder {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: flex-end;
+  padding: 1rem;
+  background: #263244;
+  color: rgb(255 255 255 / 22%);
+  font-family: var(--font-display), sans-serif;
+  font-size: 4.5rem;
+  font-weight: 700;
+  letter-spacing: -0.08em;
+}
+
+.record-swipe-card__play {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mm-onyx) 84%, transparent);
+  color: var(--mm-mint-soft);
+  font-size: 1rem;
+}
+
+.record-carousel__meta {
+  padding: 1rem 0.25rem 0;
+}
+
+.record-player__status {
+  min-height: 2.75rem;
+  flex-direction: column;
+  justify-content: center;
+  color: #9CA3AF;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.record-player__dots {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.record-player__dots span {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: #4B5563;
+}
+
+.record-player__dots .is-active {
+  width: 1rem;
+  background: var(--mm-mint);
+}
+
+.record-player__audio {
+  display: block;
+  width: min(100%, 32rem);
+  height: 3.25rem;
+  margin: 0.75rem auto 0;
+  color-scheme: dark;
+}
+
 .landing-nav--solid {
   border-color: var(--mm-charcoal);
   background: color-mix(in srgb, var(--mm-onyx) 94%, transparent);
@@ -993,7 +1177,8 @@ a {
   }
 
   .hero__logo .mm-logo__disc-wrap,
-  .mm-disc-interactive:hover .mm-logo__disc-wrap {
+  .mm-disc-interactive:hover .mm-logo__disc-wrap,
+  .record-swipe-card__disc--playing {
     animation: none;
     filter: drop-shadow(0 0 0.65rem color-mix(in srgb, var(--mm-mint-soft) 32%, transparent));
   }
