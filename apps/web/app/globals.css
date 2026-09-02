@@ -100,13 +100,37 @@
 
 html {
   scroll-behavior: smooth;
+  background: var(--mm-onyx);
+  overscroll-behavior-y: none;
 }
 
 body {
   margin: 0;
+  min-height: 100svh;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--mm-mint) 22%, transparent);
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+button,
+[role="button"] {
+  min-height: 2.75rem;
+}
+
+input,
+select,
+textarea {
+  font-size: max(1rem, 16px);
 }
 
 a {
@@ -225,8 +249,21 @@ a {
   position: fixed;
   z-index: 50;
   inset: 0 0 auto;
+  padding-top: env(safe-area-inset-top);
   border-bottom: 1px solid transparent;
   transition: background-color 220ms ease, border-color 220ms ease;
+}
+
+.app-screen {
+  min-height: 100svh;
+  background: #111827;
+  color: var(--mm-white);
+}
+
+.app-main {
+  width: min(100% - 2rem, 80rem);
+  margin-inline: auto;
+  padding-block: 1.5rem calc(6.5rem + env(safe-area-inset-bottom));
 }
 
 .landing-nav--solid {
@@ -966,4 +1003,32 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   .mint-spin { animation: none; }
+}
+
+@media (display-mode: standalone) {
+  body {
+    min-height: 100dvh;
+  }
+
+  .app-screen,
+  .landing-page {
+    min-height: 100dvh;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-main {
+    width: min(100% - 4rem, 80rem);
+    padding-block: 2rem 4rem;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero .mm-shell {
+    min-height: 38rem;
+  }
+
+  .mm-section {
+    padding-block: 4rem;
+  }
 }
