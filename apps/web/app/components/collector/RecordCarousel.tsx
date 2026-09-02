@@ -97,12 +97,14 @@ export default function RecordCarousel({ items }: { items: RecordCarouselItem[] 
   const handleScrollEnd = () => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
-    const center = scroller.scrollLeft + scroller.clientWidth / 2;
+    const scrollerRect = scroller.getBoundingClientRect();
+    const center = scrollerRect.left + scrollerRect.width / 2;
     let closestIndex = 0;
     let closestDistance = Number.POSITIVE_INFINITY;
     Array.from(scroller.children).forEach((child, index) => {
       const element = child as HTMLElement;
-      const childCenter = element.offsetLeft + element.offsetWidth / 2;
+      const childRect = element.getBoundingClientRect();
+      const childCenter = childRect.left + childRect.width / 2;
       const distance = Math.abs(center - childCenter);
       if (distance < closestDistance) {
         closestDistance = distance;
@@ -203,8 +205,14 @@ export default function RecordCarousel({ items }: { items: RecordCarouselItem[] 
         className="record-carousel scrollbar-hide"
         onScroll={handleScroll}
         onKeyDown={(event) => {
-          if (event.key === 'ArrowLeft') scrollToRecord(activeIndex - 1);
-          if (event.key === 'ArrowRight') scrollToRecord(activeIndex + 1);
+          if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            scrollToRecord(activeIndex - 1);
+          }
+          if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            scrollToRecord(activeIndex + 1);
+          }
         }}
         role="group"
         aria-label="Owned records"
