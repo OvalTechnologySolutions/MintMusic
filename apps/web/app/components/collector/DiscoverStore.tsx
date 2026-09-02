@@ -78,7 +78,7 @@ export default function DiscoverStore() {
           </p>
         </div>
         <form
-          className="flex gap-2"
+          className="flex w-full gap-2 sm:w-auto"
           onSubmit={(e) => {
             e.preventDefault();
             loadStore(query);
@@ -89,7 +89,7 @@ export default function DiscoverStore() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search albums..."
-            className="rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm"
+            className="min-w-0 flex-1 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-base sm:text-sm"
           />
           <button
             type="submit"

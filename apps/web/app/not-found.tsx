@@ -3,7 +3,7 @@ import LandingNav from '@/app/components/LandingNav';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-svh bg-gray-900 text-white">
       <LandingNav />
       <main className="max-w-lg mx-auto px-6 pt-32 pb-16 text-center">
         <p className="text-6xl font-black gradient-text mb-4">404</p>

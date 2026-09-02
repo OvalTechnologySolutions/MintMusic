@@ -43,10 +43,10 @@ export default async function PublicProfilePage({
   const isCreator = profile.role === 'creator';
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-svh bg-gray-900 text-white">
       <LandingNav />
-      <main className="max-w-3xl mx-auto px-6 pt-28 pb-16">
-        <div className="bg-gray-800/50 rounded-2xl p-8 border border-gray-700">
+      <main className="mx-auto max-w-3xl px-4 pb-16 pt-28 sm:px-6">
+        <div className="rounded-2xl border border-gray-700 bg-gray-800/50 p-5 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
             {profile.image ? (
               <Image
