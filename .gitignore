@@ -8,6 +8,7 @@ node_modules/
 out/
 build/
 dist/
+apps/api/dist/
 artifacts/
 cache/
 typechain-types/
@@ -15,6 +16,8 @@ typechain-types/
 # Environment files
 .env
 .env.local
+apps/api/data/*.json
+!apps/api/data/.gitkeep
 .env.development.local
 .env.test.local
 .env.production.local
@@ -40,3 +43,19 @@ coverage/
 # Misc
 *.log
 
+# Agent / IDE (local only)
+.agents/
+.claude/
+skills-lock.json
+
+# Accidental nested clone
+apps/web/MintMusic/
+
+# Root-level Prisma experiments (canonical schema: apps/api/prisma/)
+/prisma/
+/prisma.config.ts
+
+/generated/prisma
+.neon
+.vercel
+.env*

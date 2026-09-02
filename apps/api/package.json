@@ -1,0 +1,44 @@
+{
+  "name": "@mintmusic/api",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "prisma generate && tsc",
+    "start": "node dist/index.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:approve-creator": "tsx prisma/approve-creator.ts",
+    "db:seed-demo-release": "tsx prisma/seed-demo-release.ts",
+    "db:migrate-users": "tsx prisma/migrate-json-users.ts",
+    "db:studio": "prisma studio",
+    "worker": "tsx src/workers/index.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
+    "@aws-sdk/s3-request-presigner": "^3.750.0",
+    "@mintmusic/shared": "*",
+    "@prisma/client": "^6.4.1",
+    "bullmq": "^5.41.0",
+    "ioredis": "^5.4.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "stripe": "^17.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^20",
+    "prisma": "^6.4.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

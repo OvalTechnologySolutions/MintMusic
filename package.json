@@ -1,0 +1,33 @@
+{
+  "name": "mintmusic",
+  "version": "0.2.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w @mintmusic/web",
+    "dev:api": "npm run dev -w @mintmusic/api",
+    "build:web": "npm run build -w @mintmusic/web",
+    "build:api": "npm run build -w @mintmusic/api",
+    "build": "npm run build:api",
+    "start": "node apps/api/dist/index.js",
+    "db:migrate": "npm run db:migrate -w @mintmusic/api",
+    "db:push": "npm run db:push -w @mintmusic/api",
+    "db:seed": "npm run db:seed -w @mintmusic/api",
+    "db:approve-creator": "npm run db:approve-creator -w @mintmusic/api",
+    "db:seed-demo-release": "npm run db:seed-demo-release -w @mintmusic/api",
+    "db:migrate-users": "npm run db:migrate-users -w @mintmusic/api",
+    "worker": "npm run worker -w @mintmusic/api",
+    "lint:web": "npm run lint -w @mintmusic/web",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@neon/config": "^1.0.5",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
+    "vitest": "^3.0.5"
+  }
+}

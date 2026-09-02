@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MintMusic">
+  <defs>
+    <radialGradient id="icVinyl" cx="42%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#1a1a1d"/>
+      <stop offset="55%" stop-color="#101012"/>
+      <stop offset="100%" stop-color="#050506"/>
+    </radialGradient>
+    <linearGradient id="icLabel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7FE9BC"/>
+      <stop offset="100%" stop-color="#2FAE7A"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="248" fill="url(#icVinyl)"/>
+  <circle cx="256" cy="256" r="248" fill="none" stroke="#2FAE7A" stroke-width="12"/>
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.07">
+    <circle cx="256" cy="256" r="216" stroke-width="3"/>
+    <circle cx="256" cy="256" r="184" stroke-width="3"/>
+    <circle cx="256" cy="256" r="152" stroke-width="3"/>
+  </g>
+  <circle cx="256" cy="256" r="112" fill="url(#icLabel)"/>
+  <circle cx="256" cy="256" r="10" fill="#0A0A0B"/>
+  <path d="M256 176 C 302 212 302 302 256 338 C 210 302 210 212 256 176 Z" fill="#0A0A0B" fill-opacity="0.9"/>
+  <line x1="256" y1="188" x2="256" y2="324" stroke="#7FE9BC" stroke-width="4" stroke-linecap="round"/>
+  <g stroke="#7FE9BC" stroke-width="8" stroke-linecap="round">
+    <line x1="233" y1="272" x2="233" y2="240"/>
+    <line x1="245" y1="284" x2="245" y2="228"/>
+    <line x1="267" y1="286" x2="267" y2="226"/>
+    <line x1="279" y1="274" x2="279" y2="238"/>
+  </g>
+</svg>
