@@ -13,10 +13,19 @@ async function syncUserWithApi(payload: {
 }): Promise<{ id: string; role: UserRole; creatorStatus: CreatorStatus } | null> {
   const appBase = (process.env.AUTH_URL ?? webConfig.appUrl).replace(/\/$/, '');
 
+  const secret = process.env.INTERNAL_API_SECRET;
+  if (!secret) {
+    console.error('[auth] INTERNAL_API_SECRET is not configured');
+    return null;
+  }
+
   try {
     const res = await fetch(`${appBase}/api/auth/sync-user`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-Secret': secret,
+      },
       body: JSON.stringify(payload),
       cache: 'no-store',
     });
