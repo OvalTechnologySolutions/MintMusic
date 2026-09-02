@@ -2,66 +2,62 @@
 
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import MintMusicMark from './MintMusicMark';
 
 export default function LandingNav() {
   const { data: session, status } = useSession();
   const isAuthed = status === 'authenticated' && session?.user;
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const updateNav = () => setIsScrolled(window.scrollY > 24);
+    updateNav();
+    window.addEventListener('scroll', updateNav, { passive: true });
+    return () => window.removeEventListener('scroll', updateNav);
+  }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold gradient-text">
-          MintMusic
+    <nav className={`landing-nav ${isScrolled ? 'landing-nav--solid' : ''}`} aria-label="Main navigation">
+      <div className="mm-shell flex h-[4.75rem] items-center justify-between">
+        <Link href="/" className="mm-focus-ring rounded-lg" aria-label="MintMusic home">
+          <MintMusicMark
+            variant={isScrolled ? 'core-charcoal' : 'core-onyx'}
+            decorative={false}
+            className="w-[9.5rem] sm:w-[10.5rem]"
+          />
         </Link>
-        <div className="flex items-center gap-6 md:gap-8">
+        <div className="flex items-center gap-4 sm:gap-7">
           <Link
-            href="/discover"
-            className="text-gray-400 hover:text-white transition-colors text-sm"
+            href="/#collections"
+            className="nav-link hidden sm:inline-flex"
           >
-            Discover
+            Collections
           </Link>
           <Link
-            href="/#about"
-            className="text-gray-400 hover:text-white transition-colors text-sm hidden sm:inline"
+            href="/#how-it-works"
+            className="nav-link hidden md:inline-flex"
           >
-            About
+            How it works
           </Link>
           <Link
-            href="/#features"
-            className="text-gray-400 hover:text-white transition-colors text-sm hidden sm:inline"
+            href="/#for-artists"
+            className="nav-link hidden lg:inline-flex"
           >
-            Features
-          </Link>
-          <Link
-            href="/#creators"
-            className="text-gray-400 hover:text-white transition-colors text-sm hidden md:inline"
-          >
-            For Creators
+            For artists
           </Link>
           {isAuthed ? (
             <>
               <Link
                 href={`/u/${session.user.id}`}
-                className="text-gray-400 hover:text-white transition-colors text-sm"
+                className="nav-link hidden sm:inline-flex"
               >
-                Profile
-              </Link>
-              <Link
-                href="/settings"
-                className="text-gray-400 hover:text-white transition-colors text-sm"
-              >
-                Settings
-              </Link>
-              <Link
-                href="/collector"
-                className="text-gray-400 hover:text-white transition-colors text-sm hidden sm:inline"
-              >
-                Hub
+                Your shelf
               </Link>
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="text-sm px-4 py-2 rounded-full border border-gray-600 hover:border-gray-400 transition-colors"
+                className="mm-button mm-button--ghost px-4 py-2 text-sm"
               >
                 Sign out
               </button>
@@ -69,7 +65,7 @@ export default function LandingNav() {
           ) : (
             <Link
               href="/login"
-              className="bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-2 rounded-full transition-all hover:scale-105"
+              className="mm-button mm-button--small"
             >
               Sign in
             </Link>

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate && tsc",
+    "build": "npm run build -w @mintmusic/shared && prisma generate && tsc",
     "start": "node dist/index.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -18,15 +18,15 @@
     "worker": "tsx src/workers/index.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.750.0",
-    "@aws-sdk/s3-request-presigner": "^3.750.0",
+    "@aws-sdk/client-s3": "^3.1120.0",
+    "@aws-sdk/s3-request-presigner": "^3.1120.0",
     "@mintmusic/shared": "*",
     "@prisma/client": "^6.4.1",
     "bullmq": "^5.41.0",
-    "ioredis": "^5.4.2",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "ioredis": "^5.4.2",
     "stripe": "^17.7.0",
     "zod": "^3.24.2"
   },

@@ -1,25 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Urbanist, Work_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "../providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const urbanist = Urbanist({
+  variable: "--font-urbanist",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const workSans = Work_Sans({
+  variable: "--font-work-sans",
   subsets: ["latin"],
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: 'MintMusic — Own Your Sound',
+    default: 'MintMusic — The digital record collection',
     template: '%s | MintMusic',
   },
   description:
-    'MintMusic connects artists directly with fans through blockchain-verified ownership. Discover, collect, and support independent music.',
+    'Collect music you love, keep every edition close, and support the artists who made it.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://mintmusic.ai'),
   openGraph: {
     siteName: 'MintMusic',
@@ -35,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${urbanist.variable} ${workSans.variable} ${plexMono.variable} antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

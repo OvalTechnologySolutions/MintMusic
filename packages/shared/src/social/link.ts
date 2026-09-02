@@ -1,4 +1,4 @@
-import type { SocialPlatform } from './platforms';
+import type { SocialPlatform } from './platforms.js';
 
 /** How the link was established — manual URL today; OAuth when platform APIs are wired */
 export type SocialLinkConnectionType = 'manual' | 'oauth';

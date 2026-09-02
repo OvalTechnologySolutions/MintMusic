@@ -1,6 +1,4 @@
-import type { SocialLink, SocialLinkInput } from '../social/link';
-
-export type { SocialLink, SocialLinkInput };
+import type { SocialLink, SocialLinkInput } from '../social/link.js';
 
 export interface ArtistProfile {
   walletAddress: string;
