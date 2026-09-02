@@ -42,6 +42,9 @@ jobs:
       - name: Generate Prisma client
         run: npm run db:generate -w @mintmusic/api
 
+      - name: Push database schema
+        run: npm run db:push -w @mintmusic/api
+
       - name: Lint web
         run: npm run lint:web
 
@@ -53,9 +56,6 @@ jobs:
 
       - name: Build API
         run: npm run build:api
-
-      - name: Push database schema
-        run: npm run db:push -w @mintmusic/api
 
       - name: Build web
         run: npm run build:web
