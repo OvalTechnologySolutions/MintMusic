@@ -6,6 +6,7 @@ import type {
   User,
   UserRole,
 } from '@mintmusic/shared';
+import { ConflictError } from '../lib/errors.js';
 import { readJson, writeJson } from './json-db.js';
 import {
   assertValidSocialLinks,
@@ -58,13 +59,19 @@ export async function upsertOAuthUser(input: OAuthSyncRequest): Promise<User> {
 
   if (existingIdx >= 0) {
     const existing = users[existingIdx];
+    if (
+      existing.provider !== input.provider ||
+      existing.providerAccountId !== input.providerAccountId
+    ) {
+      throw new ConflictError(
+        'This email is already registered with a different sign-in method'
+      );
+    }
     users[existingIdx] = {
       ...existing,
       name: input.name || existing.name,
       image: input.image ?? existing.image,
       socialLinks: existing.socialLinks ?? [],
-      provider: input.provider,
-      providerAccountId: input.providerAccountId,
       updatedAt: now,
     };
     await save(users);

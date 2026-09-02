@@ -8,6 +8,7 @@ import type {
   UserRole,
 } from '@mintmusic/shared';
 import type { User as PrismaUser, SocialLink as PrismaSocialLink } from '@prisma/client';
+import { ConflictError } from '../lib/errors.js';
 import { getPrisma } from '../lib/prisma.js';
 import {
   assertValidSocialLinks,
@@ -68,16 +69,36 @@ export async function findUserById(id: string): Promise<User | undefined> {
 
 export async function upsertOAuthUser(input: OAuthSyncRequest): Promise<User> {
   const db = await getPrisma();
-  const row = await db.user.upsert({
-    where: { email: input.email.toLowerCase() },
-    create: {
-      email: input.email.toLowerCase(),
-      name: input.name,
-      image: input.image,
-      provider: input.provider,
-      providerAccountId: input.providerAccountId,
-    },
-    update: {
+  const email = input.email.toLowerCase();
+  const existing = await db.user.findUnique({
+    where: { email },
+    include: { socialLinks: true },
+  });
+
+  if (existing) {
+    if (
+      existing.provider !== input.provider ||
+      existing.providerAccountId !== input.providerAccountId
+    ) {
+      throw new ConflictError(
+        'This email is already registered with a different sign-in method'
+      );
+    }
+
+    const row = await db.user.update({
+      where: { id: existing.id },
+      data: {
+        name: input.name,
+        image: input.image,
+      },
+      include: { socialLinks: true },
+    });
+    return mapUser(row);
+  }
+
+  const row = await db.user.create({
+    data: {
+      email,
       name: input.name,
       image: input.image,
       provider: input.provider,
