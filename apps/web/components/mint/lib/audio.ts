@@ -215,31 +215,36 @@ export class PlaybackEngine {
       this.arpTimer = null;
     }
     const ctx = this.ctx;
-    if (this.padGain && ctx) {
-      this.padGain.gain.cancelScheduledValues(ctx.currentTime);
-      this.padGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+    // Snapshot the current graph so a later load/play can start a new synth
+    // without the fade-out timeout tearing it down (skip / collect / next track).
+    const pad = this.pad.splice(0);
+    const lfo = this.lfo;
+    const filter = this.filter;
+    const padGain = this.padGain;
+    this.lfo = null;
+    this.filter = null;
+    this.padGain = null;
+
+    if (padGain && ctx) {
+      padGain.gain.cancelScheduledValues(ctx.currentTime);
+      padGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
     }
-    const stopAll = () => {
-      this.pad.forEach((o) => {
+    window.setTimeout(() => {
+      pad.forEach((o) => {
         try {
           o.stop();
         } catch {
           /* already stopped */
         }
       });
-      this.pad = [];
       try {
-        this.lfo?.stop();
+        lfo?.stop();
       } catch {
         /* noop */
       }
-      this.lfo = null;
-      this.filter?.disconnect();
-      this.filter = null;
-      this.padGain?.disconnect();
-      this.padGain = null;
-    };
-    window.setTimeout(stopAll, 180);
+      filter?.disconnect();
+      padGain?.disconnect();
+    }, 180);
   }
 
   private startProgressLoop() {
