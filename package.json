@@ -21,6 +21,9 @@
     "db:migrate-users": "npm run db:migrate-users -w @mintmusic/api",
     "worker": "npm run worker -w @mintmusic/api",
     "lint:web": "npm run lint -w @mintmusic/web",
+    "mobile:sync": "npm run sync -w @mintmusic/mobile",
+    "mobile:android:debug": "npm run build:android:debug -w @mintmusic/mobile",
+    "mobile:android:release": "npm run build:android:release -w @mintmusic/mobile",
     "test": "npm run build -w @mintmusic/shared && vitest run",
     "test:watch": "vitest"
   },

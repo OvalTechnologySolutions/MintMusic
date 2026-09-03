@@ -1,0 +1,32 @@
+{
+  "appId": "ai.mintmusic.app",
+  "appName": "MintMusic",
+  "webDir": "dist",
+  "server": {
+    "url": "https://mintmusic.ai",
+    "cleartext": false,
+    "androidScheme": "https",
+    "allowNavigation": [
+      "mintmusic.ai",
+      "*.mintmusic.ai"
+    ]
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#0A0A0B",
+    "preferredContentMode": "mobile",
+    "scheme": "MintMusic"
+  },
+  "android": {
+    "backgroundColor": "#0A0A0B",
+    "allowMixedContent": false,
+    "captureInput": true
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#0A0A0B",
+      "overlaysWebView": true
+    }
+  }
+}

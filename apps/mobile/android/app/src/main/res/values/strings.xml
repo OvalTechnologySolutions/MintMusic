@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MintMusic</string>
+    <string name="title_activity_main">MintMusic</string>
+    <string name="package_name">ai.mintmusic.app</string>
+    <string name="custom_url_scheme">ai.mintmusic.app</string>
+</resources>

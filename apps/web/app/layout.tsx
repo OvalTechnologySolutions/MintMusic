@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Urbanist, Work_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "../providers";
+import NativeAppBridge from "./components/NativeAppBridge";
 
 const urbanist = Urbanist({
   variable: "--font-urbanist",
@@ -69,7 +70,10 @@ export default function RootLayout({
       <body
         className={`${urbanist.variable} ${workSans.variable} ${plexMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <NativeAppBridge />
+          {children}
+        </Providers>
       </body>
     </html>
   );
