@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Web3Provider from '@/components/Web3Provider';
 import { ArtistExperience } from './artist/ArtistExperience';
 import { MintMusicMark } from './brand/MintMusicMark';
 import { CollectionExperience } from './collection/CollectionExperience';
@@ -86,10 +87,14 @@ function Shell() {
 
 export function MintApp() {
   return (
-    <MintProvider>
-      <PlaybackProvider>
-        <Shell />
-      </PlaybackProvider>
-    </MintProvider>
+    <Web3Provider>
+      <MintProvider>
+        <PlaybackProvider>
+          <div style={{ fontFamily: 'var(--font-manrope), system-ui, sans-serif' }}>
+            <Shell />
+          </div>
+        </PlaybackProvider>
+      </MintProvider>
+    </Web3Provider>
   );
 }

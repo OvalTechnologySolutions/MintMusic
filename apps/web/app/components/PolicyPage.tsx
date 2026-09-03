@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import MintMusicMark from './MintMusicMark';
+import { MintMusicLogo } from '@/components/mint/brand/MintMusicLogo';
 
 export default function PolicyPage({
   eyebrow,
@@ -17,7 +17,7 @@ export default function PolicyPage({
     <main className="min-h-svh bg-[var(--mm-onyx)] px-4 pb-[max(4rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-[var(--mm-paper)] sm:px-6">
       <div className="mx-auto max-w-3xl">
         <Link href="/" className="mm-focus-ring inline-flex rounded-lg" aria-label="MintMusic home">
-          <MintMusicMark variant="core-onyx" decorative className="w-40" />
+          <MintMusicLogo size={30} variant="dark" />
         </Link>
         <article className="policy-page mt-12">
           <p className="mm-eyebrow text-[var(--mm-mint-soft)]">{eyebrow}</p>

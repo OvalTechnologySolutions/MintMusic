@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Urbanist, Work_Sans } from "next/font/google";
+import { IBM_Plex_Mono, Manrope, Urbanist, Work_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "../providers";
 import NativeAppBridge from "./components/NativeAppBridge";
@@ -20,14 +20,20 @@ const plexMono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
   applicationName: 'MintMusic',
   title: {
-    default: 'MintMusic — The digital record collection',
+    default: 'MintMusic — hear it fresh.',
     template: '%s | MintMusic',
   },
   description:
-    'Collect music you love, keep every edition close, and support the artists who made it.',
+    'Discover music as spinning vinyl. Swipe left to skip, swipe right to collect.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://mintmusic.ai'),
   manifest: '/manifest.webmanifest',
   icons: {
@@ -68,7 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${urbanist.variable} ${workSans.variable} ${plexMono.variable} antialiased`}
+        className={`${urbanist.variable} ${workSans.variable} ${plexMono.variable} ${manrope.variable} antialiased`}
       >
         <Providers>
           <NativeAppBridge />

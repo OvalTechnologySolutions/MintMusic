@@ -15,16 +15,13 @@ export function GET() {
   return NextResponse.json(
     {
       applinks: {
-        apps: [],
+        // Current AASA format: `appIDs` + `components` (not the legacy
+        // `appID` + `paths`). The record player is the whole product at `/`,
+        // so all in-scope paths open the app.
         details: [
           {
-            appID: appId,
-            components: [
-              { '/': '/collector*', comment: 'Owned collection routes' },
-              { '/': '/discover*', comment: 'Discovery routes' },
-              { '/': '/u/*', comment: 'Public creator profiles' },
-              { '/': '/settings*', comment: 'Account settings' },
-            ],
+            appIDs: [appId],
+            components: [{ '/': '/*', comment: 'MintMusic app routes' }],
           },
         ],
       },

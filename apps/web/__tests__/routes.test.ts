@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-/** Mirrors middleware matcher paths for regression testing */
-const PROTECTED_PREFIXES = ['/collector', '/settings', '/creator/dashboard'];
+/**
+ * The record player is the whole product at `/` and there are no
+ * middleware-protected routes anymore (the old marketplace hub / settings /
+ * creator dashboard were retired). This mirrors that: nothing is protected.
+ */
+const PROTECTED_PREFIXES: string[] = [];
 
 function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
@@ -9,26 +13,22 @@ function isProtectedPath(pathname: string): boolean {
   );
 }
 
-describe('protected routes', () => {
-  it('protects collector hub', () => {
-    expect(isProtectedPath('/collector')).toBe(true);
-    expect(isProtectedPath('/collector/foo')).toBe(true);
+describe('routes', () => {
+  it('has no protected prefixes', () => {
+    expect(PROTECTED_PREFIXES).toHaveLength(0);
   });
 
-  it('protects settings', () => {
-    expect(isProtectedPath('/settings')).toBe(true);
-  });
-
-  it('allows public routes', () => {
+  it('treats core app and policy routes as public', () => {
     expect(isProtectedPath('/')).toBe(false);
-    expect(isProtectedPath('/discover')).toBe(false);
-    expect(isProtectedPath('/login')).toBe(false);
-    expect(isProtectedPath('/u/user-123')).toBe(false);
+    expect(isProtectedPath('/install')).toBe(false);
+    expect(isProtectedPath('/privacy')).toBe(false);
+    expect(isProtectedPath('/terms')).toBe(false);
+    expect(isProtectedPath('/support')).toBe(false);
   });
 });
 
 describe('web config defaults', () => {
-  it('uses mintmusic.ai as production app URL when set', () => {
+  it('uses a valid production app URL', () => {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
     expect(appUrl).toMatch(/^https?:\/\//);
   });

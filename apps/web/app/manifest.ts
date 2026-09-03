@@ -2,11 +2,11 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'MintMusic — The Digital Record Collection',
+    name: 'MintMusic — hear it fresh.',
     short_name: 'MintMusic',
-    description: 'Collect music you love and keep every edition close.',
+    description: 'Discover music as spinning vinyl. Swipe to collect.',
     id: '/',
-    start_url: '/collector',
+    start_url: '/',
     scope: '/',
     display: 'standalone',
     display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],

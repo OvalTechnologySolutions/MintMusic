@@ -41,7 +41,7 @@ export default function SupportPage() {
       <section>
         <h2>Account and privacy</h2>
         <p>
-          Update account details from <Link href="/settings">Settings</Link>. To permanently
+          Update account details from <Link href="/">Profile &amp; Settings</Link>. To permanently
           remove an account, review the <Link href="/account-deletion">account deletion steps</Link>.
           Privacy requests can be sent to{' '}
           <a href="mailto:privacy@mintmusic.ai">privacy@mintmusic.ai</a>.
