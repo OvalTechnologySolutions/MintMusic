@@ -47,6 +47,9 @@ export default function LandingNav() {
           >
             For artists
           </Link>
+          <Link href="/install" className="nav-link hidden lg:inline-flex">
+            Install
+          </Link>
           {isAuthed ? (
             <>
               <Link
@@ -93,6 +96,7 @@ export default function LandingNav() {
           <Link onClick={() => setMenuOpen(false)} href="/#how-it-works" className="landing-mobile-menu__link">How it works</Link>
           <Link onClick={() => setMenuOpen(false)} href="/#for-artists" className="landing-mobile-menu__link">For artists</Link>
           <Link onClick={() => setMenuOpen(false)} href="/discover" className="landing-mobile-menu__link">Discover music</Link>
+          <Link onClick={() => setMenuOpen(false)} href="/install" className="landing-mobile-menu__link">Install app</Link>
           {isAuthed ? (
             <>
               <Link onClick={() => setMenuOpen(false)} href={`/u/${session.user.id}`} className="landing-mobile-menu__link">Your shelf</Link>

@@ -251,6 +251,10 @@ export default function LandingPage() {
               <Link className="footer-link" href="/discover">Discover</Link>
               <Link className="footer-link" href="/collector">Your collection</Link>
               <Link className="footer-link" href="/creator/apply">For artists</Link>
+              <Link className="footer-link" href="/install">Install</Link>
+              <Link className="footer-link" href="/privacy">Privacy</Link>
+              <Link className="footer-link" href="/terms">Terms</Link>
+              <Link className="footer-link" href="/support">Support</Link>
               <Link className="footer-link" href="/login">Sign in</Link>
             </nav>
           </div>
