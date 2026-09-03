@@ -1,0 +1,20 @@
+{
+  "locale": "en-US",
+  "appName": "MintMusic",
+  "appleSubtitle": "Your digital record shelf",
+  "appleKeywords": "music,records,collection,artists,albums,playback",
+  "googleShortDescription": "Collect meaningful releases and keep your digital record shelf close.",
+  "fullDescription": "MintMusic is a home for the music that stays with you.\n\nSign in to explore artist releases, return to records you have collected, and play owned music from a tactile, record-inspired shelf. MintMusic puts deliberate listening ahead of an endless algorithmic feed and keeps release artwork, edition details, and artist context together.\n\nThe mobile edition is a reader app for discovery, collection access, and secure playback. Your collection follows your MintMusic account across supported devices.\n\nFeatures:\n• Browse artist releases and personal recommendations\n• Swipe through your owned record shelf\n• Play supported owned music with accessible controls\n• Open verified MintMusic links directly in the app\n• Request account deletion from Settings\n• Respect reduced-motion and device accessibility preferences\n\nA secure internet connection and MintMusic account are required. Availability of releases and playback can vary by territory and rights-holder restrictions.",
+  "category": {
+    "applePrimary": "Music",
+    "google": "Music & Audio"
+  },
+  "urls": {
+    "marketing": "https://mintmusic.ai",
+    "support": "https://mintmusic.ai/support",
+    "privacy": "https://mintmusic.ai/privacy",
+    "terms": "https://mintmusic.ai/terms",
+    "accountDeletion": "https://mintmusic.ai/account-deletion"
+  },
+  "copyright": "© 2026 MintMusic"
+}

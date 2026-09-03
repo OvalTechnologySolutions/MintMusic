@@ -220,6 +220,26 @@ export async function getPublicProfile(
   return user ? toPublicProfile(user) : null;
 }
 
+export async function getAccountDeletionRequest(userId: string) {
+  const db = await getPrisma();
+  return db.accountDeletionRequest.findUnique({ where: { userId } });
+}
+
+export async function requestAccountDeletion(userId: string) {
+  const db = await getPrisma();
+  return db.accountDeletionRequest.upsert({
+    where: { userId },
+    create: { userId },
+    update: { status: 'pending', requestedAt: new Date() },
+  });
+}
+
+export async function cancelAccountDeletion(userId: string): Promise<boolean> {
+  const db = await getPrisma();
+  const result = await db.accountDeletionRequest.deleteMany({ where: { userId } });
+  return result.count > 0;
+}
+
 /** Import a user record from legacy JSON store */
 export async function importJsonUser(record: {
   id: string;

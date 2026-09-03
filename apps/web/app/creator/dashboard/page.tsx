@@ -22,13 +22,13 @@ export default function CreatorDashboardPage() {
   }, [status, session, router]);
 
   if (status !== 'authenticated' || session?.user?.creatorStatus !== 'approved') {
-    return <div className="min-h-screen bg-gray-900" />;
+    return <div className="min-h-svh bg-gray-900" />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="app-screen">
       <AppHeader />
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="app-main">
         <h1 className="text-3xl font-bold mb-2">Creator Studio</h1>
         <p className="text-gray-400 mb-8">
           Manage releases, social links, and Stripe payouts.

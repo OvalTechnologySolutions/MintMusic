@@ -52,13 +52,13 @@ export default function CreatorApplyPage() {
   };
 
   if (status === 'loading') {
-    return <div className="min-h-screen bg-gray-900" />;
+    return <div className="min-h-svh bg-gray-900" />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="app-screen">
       <AppHeader />
-      <main className="max-w-2xl mx-auto px-6 py-8">
+      <main className="app-main max-w-2xl">
         <h1 className="text-3xl font-bold mb-2">Become a Creator</h1>
         <p className="text-gray-400 mb-8">
           Early access: submit your interest and we&apos;ll review your application.
@@ -81,7 +81,7 @@ export default function CreatorApplyPage() {
             </Link>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-6 bg-gray-800/50 rounded-2xl p-8 border border-gray-700">
+          <form onSubmit={submit} className="space-y-6 rounded-2xl border border-gray-700 bg-gray-800/50 p-4 sm:p-8">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Artist / project name</label>
               <input

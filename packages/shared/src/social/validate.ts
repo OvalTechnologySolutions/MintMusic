@@ -1,8 +1,8 @@
 import {
   SOCIAL_PLATFORM_META,
   type SocialPlatform,
-} from './platforms';
-import type { SocialLinkInput } from './link';
+} from './platforms.js';
+import type { SocialLinkInput } from './link.js';
 
 export type { SocialLinkInput };
 

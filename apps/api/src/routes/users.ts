@@ -3,7 +3,14 @@ import type { UpdateUserRequest } from '@mintmusic/shared';
 import type { AuthedRequest } from '../middleware/internal-auth.js';
 import { requireInternalUser } from '../middleware/internal-auth.js';
 import { routeParam } from '../lib/route-param.js';
-import { findUserById, getPublicProfile, updateUser } from '../store/users.js';
+import {
+  cancelAccountDeletion,
+  findUserById,
+  getAccountDeletionRequest,
+  getPublicProfile,
+  requestAccountDeletion,
+  updateUser,
+} from '../store/users.js';
 
 export const usersRouter = Router();
 
@@ -36,4 +43,19 @@ usersRouter.patch('/me', async (req: AuthedRequest, res) => {
     return;
   }
   res.json({ user });
+});
+
+usersRouter.get('/me/deletion-request', async (req: AuthedRequest, res) => {
+  const request = await getAccountDeletionRequest(req.userId!);
+  res.json({ request });
+});
+
+usersRouter.post('/me/deletion-request', async (req: AuthedRequest, res) => {
+  const request = await requestAccountDeletion(req.userId!);
+  res.status(202).json({ request });
+});
+
+usersRouter.delete('/me/deletion-request', async (req: AuthedRequest, res) => {
+  const cancelled = await cancelAccountDeletion(req.userId!);
+  res.json({ cancelled });
 });

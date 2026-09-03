@@ -48,12 +48,12 @@ export default function AlbumCard({ album }: { album: AlbumProps }) {
         />
         
         {/* Overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
+        <div className="absolute inset-0 hidden items-end justify-center bg-gradient-to-t from-black/80 via-black/20 to-transparent pb-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:flex">
           {!isOwned && (
             <button 
               onClick={purchase}
               disabled={isConfirming || isSoldOut}
-              className="bg-green-500 hover:bg-green-400 text-black text-sm font-bold px-6 py-2.5 rounded-full transition-all transform translate-y-4 group-hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="native-store-purchase bg-green-500 hover:bg-green-400 text-black text-sm font-bold px-6 py-2.5 rounded-full transition-all transform translate-y-4 group-hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isConfirming ? (
                 <span className="flex items-center gap-2">
@@ -100,6 +100,15 @@ export default function AlbumCard({ album }: { album: AlbumProps }) {
           )}
           <span className="text-gray-500 text-xs">#{album.id}</span>
         </div>
+        {!isOwned && (
+          <button
+            onClick={purchase}
+            disabled={isConfirming || isSoldOut}
+            className="native-store-purchase mt-4 min-h-11 w-full rounded-xl bg-green-500 px-4 py-3 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50 md:hidden"
+          >
+            {isConfirming ? 'Confirming…' : isSoldOut ? 'Sold out' : `Collect for ${album.price} ETH`}
+          </button>
+        )}
         
         {/* Transaction Feedback */}
         {error && (
