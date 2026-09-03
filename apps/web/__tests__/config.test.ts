@@ -20,16 +20,15 @@ describe('webConfig production defaults', () => {
 });
 
 describe('MVP public routes', () => {
-  const PUBLIC_ROUTES = ['/', '/discover', '/login'];
+  const PUBLIC_ROUTES = ['/', '/install', '/privacy', '/terms', '/support'];
 
-  it('includes core landing and discovery routes', () => {
+  it('includes the record-player home route', () => {
     expect(PUBLIC_ROUTES).toContain('/');
-    expect(PUBLIC_ROUTES).toContain('/discover');
-    expect(PUBLIC_ROUTES).toContain('/login');
   });
 
-  it('matches public profile URL pattern', () => {
-    const profilePath = '/u/user-abc123';
-    expect(profilePath).toMatch(/^\/u\/[^/]+$/);
+  it('includes app-store compliance pages', () => {
+    expect(PUBLIC_ROUTES).toContain('/install');
+    expect(PUBLIC_ROUTES).toContain('/privacy');
+    expect(PUBLIC_ROUTES).toContain('/terms');
   });
 });

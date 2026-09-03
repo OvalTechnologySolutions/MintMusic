@@ -1,7 +1,7 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { MintApp } from '@/components/mint/MintApp';
-
-export default function MintAppPage() {
-  return <MintApp />;
+/** The record player is now the whole product at `/`. Keep `/app` as a redirect
+ *  for any existing links / installed PWAs whose start_url was `/app`. */
+export default function MintAppRedirect() {
+  redirect('/');
 }

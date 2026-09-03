@@ -14,7 +14,6 @@
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/status-bar": "^8.0.3",
     "@mintmusic/shared": "*",
-    "@rainbow-me/rainbowkit": "^2.2.10",
     "@tanstack/react-query": "^5.90.12",
     "clsx": "^2.1.1",
     "motion": "^13.1.1",

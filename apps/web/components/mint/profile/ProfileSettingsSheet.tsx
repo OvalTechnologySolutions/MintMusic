@@ -7,6 +7,7 @@ import { useMint } from '../lib/store';
 import { GENRES, type Genre } from '../lib/types';
 import { useIsDesktop } from '../lib/useIsDesktop';
 import { Button, Chip, Sheet, Toggle } from '../ui/primitives';
+import { WalletCapability } from './WalletCapability';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -170,6 +171,10 @@ export function ProfileSettingsSheet({
         <button onClick={resetTutorial} className="mint-focus mt-1 text-[13px]" style={{ color: 'var(--mint-primary)' }}>
           Reset swipe tutorial
         </button>
+      </Section>
+
+      <Section title="Wallet">
+        <WalletCapability />
       </Section>
 
       <Section title="App">

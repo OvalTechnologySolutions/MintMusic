@@ -13,13 +13,11 @@ export default function AccountDeletionPage() {
       <section>
         <h2>Start in the app</h2>
         <p>
-          Sign in, open <Link href="/settings?tab=account">Settings → Account</Link>, and choose
-          “Request account deletion.” This works from the website and the iOS or Android app.
-          You can cancel from the same screen before processing is complete.
+          Open the profile menu (top-right), go to <Link href="/">Profile &amp; Settings → Account</Link>,
+          and choose “Delete account.” This works from the website and the iOS or Android app.
         </p>
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-          <Link href="/settings?tab=account" className="mm-button">Open account settings</Link>
-          <Link href="/login" className="mm-button mm-button--ghost">Sign in</Link>
+          <Link href="/" className="mm-button">Open MintMusic</Link>
         </div>
       </section>
 

@@ -34,6 +34,7 @@ const KEYS = {
   playback: 'mint:playback',
   a11y: 'mint:a11y',
   tutorial: 'mint:tutorialSeen',
+  wallet: 'mint:wallet',
 } as const;
 
 function load<T>(key: string, fallback: T): T {
@@ -89,6 +90,8 @@ interface MintState {
   playback: PlaybackSettings;
   a11y: AccessibilitySettings;
   tutorialSeen: boolean;
+  /** Linked wallet address (optional capability; not advertised). */
+  walletAddress: string | null;
 
   // catalog
   catalog: Song[];
@@ -108,6 +111,7 @@ interface MintState {
   recordEvent: (songId: string, type: DiscoveryEventType) => void;
   updatePlayback: (patch: Partial<PlaybackSettings>) => void;
   updateA11y: (patch: Partial<AccessibilitySettings>) => void;
+  setWalletAddress: (address: string | null) => void;
   markTutorialSeen: () => void;
   resetTutorial: () => void;
   deleteAccount: () => void;
@@ -126,6 +130,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
   const [playback, setPlayback] = useState<PlaybackSettings>(DEFAULT_PLAYBACK);
   const [a11y, setA11y] = useState<AccessibilitySettings>(DEFAULT_A11Y);
   const [tutorialSeen, setTutorialSeen] = useState(false);
+  const [walletAddress, setWalletAddressState] = useState<string | null>(null);
 
   // Hydrate once on mount (client only) to avoid SSR/localStorage mismatch.
   // The `hydrated` gate renders a loader until this runs, so there is no
@@ -141,6 +146,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     setPlayback(load(KEYS.playback, DEFAULT_PLAYBACK));
     setA11y(load(KEYS.a11y, DEFAULT_A11Y));
     setTutorialSeen(load(KEYS.tutorial, false));
+    setWalletAddressState(load<string | null>(KEYS.wallet, null));
     setHydrated(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -162,7 +168,8 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     save(KEYS.playback, playback);
     save(KEYS.a11y, a11y);
     save(KEYS.tutorial, tutorialSeen);
-  }, [hydrated, session, listener, artist, collection, uploads, events, playback, a11y, tutorialSeen]);
+    save(KEYS.wallet, walletAddress);
+  }, [hydrated, session, listener, artist, collection, uploads, events, playback, a11y, tutorialSeen, walletAddress]);
 
   const catalog = useMemo<Song[]>(() => {
     const published = uploads.filter((s) => s.status === 'published' && s.eligibleForDiscovery);
@@ -254,6 +261,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     (patch: Partial<AccessibilitySettings>) => setA11y((prev) => ({ ...prev, ...patch })),
     [],
   );
+  const setWalletAddress = useCallback((address: string | null) => setWalletAddressState(address), []);
   const markTutorialSeen = useCallback(() => setTutorialSeen(true), []);
   const resetTutorial = useCallback(() => setTutorialSeen(false), []);
 
@@ -265,6 +273,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     setUploads([]);
     setEvents([]);
     setTutorialSeen(false);
+    setWalletAddressState(null);
   }, []);
 
   const value: MintState = {
@@ -278,6 +287,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     playback,
     a11y,
     tutorialSeen,
+    walletAddress,
     catalog,
     collectedSongs,
     isCollected,
@@ -293,6 +303,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     recordEvent,
     updatePlayback,
     updateA11y,
+    setWalletAddress,
     markTutorialSeen,
     resetTutorial,
     deleteAccount,
