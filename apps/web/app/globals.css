@@ -1,6 +1,21 @@
 @import "tailwindcss";
 
 :root {
+  /* Record-player MVP tokens (kept for /app components) */
+  --mint-primary: #7fe9bc;
+  --mint-secondary: #6fe3b4;
+  --mint-deep: #2fae7a;
+  --onyx: #0a0a0b;
+  --vinyl: #101012;
+  --technical-gray: #2b2b2d;
+  --paper-white: #ffffff;
+  --studio-gray: #e7e7e4;
+  --charcoal: #1c1f21;
+  --warm-ink: #14120f;
+  --warm-beige: #f3eee5;
+  --gold: #c8a24b;
+  --gold-light: #e8d19a;
+
   --mm-ink: #14120F;
   --mm-ink-muted: #5E594F;
   --mm-onyx: #0A0A0B;
@@ -1216,6 +1231,78 @@ a {
 
 .scrollbar-hide {
   scrollbar-width: none;
+}
+
+/* ─────────────────────────────────────────────
+   MintMusic record-player MVP styles
+   ───────────────────────────────────────────── */
+
+/* iOS safe-area helpers */
+.mint-safe-top { padding-top: env(safe-area-inset-top); }
+.mint-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.mint-safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Continuous vinyl rotation (33⅓ RPM ≈ 1.8s per revolution) */
+@keyframes mint-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.mint-spin {
+  animation: mint-spin 1.8s linear infinite;
+}
+.mint-spin-paused {
+  animation-play-state: paused;
+}
+
+/* Subtle onyx vinyl grain for full-bleed backgrounds */
+.mint-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.08) 0.5px,
+    transparent 0.6px
+  );
+  background-size: 3px 3px;
+}
+
+/* Concentric vinyl grooves via repeating radial gradient */
+.mint-grooves {
+  background-image: repeating-radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.045) 0px,
+    rgba(255, 255, 255, 0.045) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* Chrome material finish (premium accent only) */
+.mint-chrome {
+  background: linear-gradient(
+    135deg,
+    #f5f5f5 0%,
+    #a7a7aa 22%,
+    #ffffff 42%,
+    #77777a 68%,
+    #e4e4e7 100%
+  );
+}
+
+.mint-focus:focus-visible {
+  outline: 2px solid var(--mint-primary);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mint-spin { animation: none; }
 }
 
 @media (display-mode: standalone) {

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MintMusic">
+  <defs>
+    <radialGradient id="mmVinyl" cx="42%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#1a1a1d"/>
+      <stop offset="55%" stop-color="#101012"/>
+      <stop offset="100%" stop-color="#050506"/>
+    </radialGradient>
+    <linearGradient id="mmLabel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7FE9BC"/>
+      <stop offset="100%" stop-color="#2FAE7A"/>
+    </linearGradient>
+    <linearGradient id="mmRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7FE9BC"/>
+      <stop offset="100%" stop-color="#2FAE7A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- vinyl body -->
+  <circle cx="256" cy="256" r="248" fill="url(#mmVinyl)"/>
+  <circle cx="256" cy="256" r="248" fill="none" stroke="url(#mmRim)" stroke-width="10"/>
+
+  <!-- concentric grooves -->
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.06">
+    <circle cx="256" cy="256" r="222" stroke-width="2"/>
+    <circle cx="256" cy="256" r="200" stroke-width="2"/>
+    <circle cx="256" cy="256" r="178" stroke-width="2"/>
+    <circle cx="256" cy="256" r="156" stroke-width="2"/>
+    <circle cx="256" cy="256" r="134" stroke-width="2"/>
+  </g>
+
+  <!-- soft highlight -->
+  <ellipse cx="188" cy="180" rx="120" ry="60" fill="#ffffff" fill-opacity="0.05"/>
+
+  <!-- center label -->
+  <circle cx="256" cy="256" r="104" fill="url(#mmLabel)"/>
+  <circle cx="256" cy="256" r="104" fill="none" stroke="#0A0A0B" stroke-opacity="0.12" stroke-width="2"/>
+  <circle cx="256" cy="256" r="9" fill="#0A0A0B"/>
+
+  <!-- leaf -->
+  <path d="M256 172 C 306 210 306 302 256 340 C 206 302 206 210 256 172 Z"
+        fill="#0A0A0B" fill-opacity="0.14"/>
+  <path d="M256 178 C 300 212 300 300 256 334 C 212 300 212 212 256 178 Z"
+        fill="#0A0A0B" fill-opacity="0.9"/>
+  <line x1="256" y1="190" x2="256" y2="322" stroke="#7FE9BC" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- soundwave / equalizer inside the leaf -->
+  <g stroke="#7FE9BC" stroke-width="7" stroke-linecap="round">
+    <line x1="234" y1="270" x2="234" y2="242"/>
+    <line x1="245" y1="282" x2="245" y2="230"/>
+    <line x1="267" y1="284" x2="267" y2="228"/>
+    <line x1="278" y1="272" x2="278" y2="240"/>
+  </g>
+</svg>
