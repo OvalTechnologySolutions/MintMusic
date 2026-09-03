@@ -50,6 +50,17 @@ Verify these public URLs return HTTP 200 without redirects or authentication:
 - `https://mintmusic.ai/.well-known/apple-app-site-association`
 - `https://mintmusic.ai/.well-known/assetlinks.json`
 
+Deploy the updated Prisma schema before exposing account deletion:
+
+```bash
+npm run db:push
+```
+
+The operations team must review pending rows in `account_deletion_requests`, verify the requester,
+complete deletion/anonymization across primary storage, object storage, analytics, payment, and
+support systems, then retain only records required by law. This manual fulfillment process must
+be staffed and tested before review; recording a request without completing it is not compliant.
+
 ## Apple App Store checklist
 
 Account and signing:
@@ -132,6 +143,8 @@ Do not submit until all gates are true:
 - Physical-device tests cover sign-in, sign-out, deep links, interruption recovery, deletion,
   accessibility, reduced motion, offline failure, and owned playback
 - Store screenshots show the submitted build and contain no placeholder or unavailable content
+- The review build provides enough platform-integrated utility to satisfy App Review guideline
+  4.2; a thin website wrapper can be rejected even when it is technically valid
 
 Store accounts, signing keys, certificate fingerprints, team IDs, final legal approval, reviewer
 credentials, and screenshots are operator-owned inputs and must never be committed to Git.
