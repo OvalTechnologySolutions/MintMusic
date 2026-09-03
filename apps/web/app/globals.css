@@ -566,6 +566,48 @@ a {
   color-scheme: dark;
 }
 
+.policy-page h2 {
+  margin-bottom: 0.75rem;
+  color: var(--mm-white);
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.4rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.policy-page h3 {
+  margin-bottom: 0.5rem;
+  color: var(--mm-paper);
+  font-weight: 650;
+}
+
+.policy-page ul {
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.policy-page li + li {
+  margin-top: 0.5rem;
+}
+
+.policy-page a {
+  color: var(--mm-mint-soft);
+  text-decoration: underline;
+}
+
+.native-reader-notice {
+  display: none;
+}
+
+html[data-native-app] .native-store-purchase {
+  display: none !important;
+}
+
+html[data-native-app] .native-reader-notice {
+  display: block;
+}
+
 .landing-nav--solid {
   border-color: var(--mm-charcoal);
   background: color-mix(in srgb, var(--mm-onyx) 94%, transparent);

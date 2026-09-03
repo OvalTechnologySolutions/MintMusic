@@ -13,6 +13,15 @@ import {
 } from '../services/social-links.js';
 
 const FILE = 'users.json';
+const DELETION_REQUESTS_FILE = 'account-deletion-requests.json';
+
+interface AccountDeletionRequestRecord {
+  id: string;
+  userId: string;
+  status: 'pending';
+  requestedAt: string;
+  updatedAt: string;
+}
 
 export interface UserRecord extends User {
   provider: string;
@@ -190,6 +199,42 @@ export async function getPublicProfile(
   const users = await load();
   const record = users.find((u) => u.id === id);
   return record ? toPublicProfile(record) : null;
+}
+
+export async function getAccountDeletionRequest(userId: string) {
+  const requests = await readJson<AccountDeletionRequestRecord[]>(DELETION_REQUESTS_FILE, []);
+  return requests.find((request) => request.userId === userId) ?? null;
+}
+
+export async function requestAccountDeletion(userId: string) {
+  const requests = await readJson<AccountDeletionRequestRecord[]>(DELETION_REQUESTS_FILE, []);
+  const now = new Date().toISOString();
+  const existing = requests.find((request) => request.userId === userId);
+  if (existing) {
+    existing.status = 'pending';
+    existing.requestedAt = now;
+    existing.updatedAt = now;
+    await writeJson(DELETION_REQUESTS_FILE, requests);
+    return existing;
+  }
+  const request: AccountDeletionRequestRecord = {
+    id: `del_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+    userId,
+    status: 'pending',
+    requestedAt: now,
+    updatedAt: now,
+  };
+  requests.push(request);
+  await writeJson(DELETION_REQUESTS_FILE, requests);
+  return request;
+}
+
+export async function cancelAccountDeletion(userId: string): Promise<boolean> {
+  const requests = await readJson<AccountDeletionRequestRecord[]>(DELETION_REQUESTS_FILE, []);
+  const remaining = requests.filter((request) => request.userId !== userId);
+  if (remaining.length === requests.length) return false;
+  await writeJson(DELETION_REQUESTS_FILE, remaining);
+  return true;
 }
 
 /** Export all JSON users for migration */

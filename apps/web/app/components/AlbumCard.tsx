@@ -53,7 +53,7 @@ export default function AlbumCard({ album }: { album: AlbumProps }) {
             <button 
               onClick={purchase}
               disabled={isConfirming || isSoldOut}
-              className="bg-green-500 hover:bg-green-400 text-black text-sm font-bold px-6 py-2.5 rounded-full transition-all transform translate-y-4 group-hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="native-store-purchase bg-green-500 hover:bg-green-400 text-black text-sm font-bold px-6 py-2.5 rounded-full transition-all transform translate-y-4 group-hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isConfirming ? (
                 <span className="flex items-center gap-2">
@@ -104,7 +104,7 @@ export default function AlbumCard({ album }: { album: AlbumProps }) {
           <button
             onClick={purchase}
             disabled={isConfirming || isSoldOut}
-            className="mt-4 min-h-11 w-full rounded-xl bg-green-500 px-4 py-3 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50 md:hidden"
+            className="native-store-purchase mt-4 min-h-11 w-full rounded-xl bg-green-500 px-4 py-3 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50 md:hidden"
           >
             {isConfirming ? 'Confirming…' : isSoldOut ? 'Sold out' : `Collect for ${album.price} ETH`}
           </button>

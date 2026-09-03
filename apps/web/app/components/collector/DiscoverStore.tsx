@@ -99,6 +99,9 @@ export default function DiscoverStore() {
           </button>
         </form>
       </div>
+      <p className="native-reader-notice mb-4 rounded-lg border border-emerald-800 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200">
+        The mobile app is in reader mode. Sign in to listen to releases already in your collection.
+      </p>
 
       {error && (
         <p className="mb-4 rounded-lg border border-red-800 bg-red-950/40 px-3 py-2 text-sm text-red-300">
@@ -147,7 +150,7 @@ export default function DiscoverStore() {
                     type="button"
                     disabled={buyingId === release.id}
                     onClick={() => handleBuy(release.id)}
-                    className="mt-3 w-full rounded-lg bg-purple-600 py-2 text-sm font-medium hover:bg-purple-500 disabled:opacity-50"
+                    className="native-store-purchase mt-3 w-full rounded-lg bg-purple-600 py-2 text-sm font-medium hover:bg-purple-500 disabled:opacity-50"
                   >
                     {buyingId === release.id ? 'Redirecting…' : 'Buy release'}
                   </button>

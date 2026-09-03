@@ -115,8 +115,21 @@ model User {
   tasteConnections  TasteConnection[]
   tasteProfile      TasteProfile?
   playbackSessions  PlaybackSession[]
+  accountDeletionRequest AccountDeletionRequest?
 
   @@map("users")
+}
+
+model AccountDeletionRequest {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  status      String   @default("pending")
+  requestedAt DateTime @default(now()) @map("requested_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account_deletion_requests")
 }
 
 model SocialLink {

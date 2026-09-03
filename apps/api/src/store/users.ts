@@ -88,3 +88,18 @@ export async function getPublicProfile(
 export function toPublicProfile(record: User): PublicUserProfile {
   return prismaStore.toPublicProfile(record);
 }
+
+export async function getAccountDeletionRequest(userId: string) {
+  if (await usePrisma()) return prismaStore.getAccountDeletionRequest(userId);
+  return jsonStore.getAccountDeletionRequest(userId);
+}
+
+export async function requestAccountDeletion(userId: string) {
+  if (await usePrisma()) return prismaStore.requestAccountDeletion(userId);
+  return jsonStore.requestAccountDeletion(userId);
+}
+
+export async function cancelAccountDeletion(userId: string) {
+  if (await usePrisma()) return prismaStore.cancelAccountDeletion(userId);
+  return jsonStore.cancelAccountDeletion(userId);
+}

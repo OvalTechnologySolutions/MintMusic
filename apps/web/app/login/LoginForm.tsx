@@ -10,8 +10,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     'Sign-in was denied. Usually the API is not running or could not save your profile. Start the API with npm run dev:api, then try again.',
   Configuration:
     'Auth is misconfigured. Check AUTH_SECRET and OAuth client IDs in apps/web/.env.local.',
-  OAuthSignin: 'Could not start OAuth sign-in. Check your Google/GitHub app settings.',
-  OAuthCallback: 'OAuth callback failed. Verify redirect URIs in Google Cloud Console.',
+  OAuthSignin: 'Could not start OAuth sign-in. Check your Apple, Google, or GitHub app settings.',
+  OAuthCallback: 'OAuth callback failed. Verify the provider callback URL.',
   Default: 'Sign-in failed. Ensure npm run dev:api is running, then try again.',
 };
 
@@ -49,6 +49,13 @@ export default function LoginForm() {
       )}
 
       <div className="space-y-3">
+        <button
+          type="button"
+          onClick={() => signIn('apple', { callbackUrl })}
+          className="w-full rounded-xl bg-black px-6 py-3 font-semibold text-white ring-1 ring-white/30 hover:bg-gray-950"
+        >
+          Continue with Apple
+        </button>
         <button
           type="button"
           onClick={() => signIn('google', { callbackUrl })}
