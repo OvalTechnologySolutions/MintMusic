@@ -5,20 +5,13 @@ import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { routeFromAppUrl } from '@/lib/deep-link';
 
-function routeFromAppUrl(value: string) {
-  try {
-    const url = new URL(value);
-    if (url.protocol === 'mintmusic:') {
-      return `/${url.host}${url.pathname}${url.search}${url.hash}`;
-    }
-    if (url.protocol === 'https:' && ['mintmusic.ai', 'www.mintmusic.ai'].includes(url.host)) {
-      return `${url.pathname}${url.search}${url.hash}`;
-    }
-  } catch {
-    return null;
-  }
-  return null;
+function navigateToAppRoute(route: string): void {
+  const dest = new URL(route, window.location.origin);
+  if (dest.origin !== window.location.origin) return;
+  if (!dest.pathname.startsWith('/') || dest.pathname.startsWith('//')) return;
+  window.location.assign(`${dest.pathname}${dest.search}${dest.hash}`);
 }
 
 export default function NativeAppBridge() {
@@ -37,7 +30,7 @@ export default function NativeAppBridge() {
 
       const deepLinkListener = await App.addListener('appUrlOpen', ({ url }) => {
         const route = routeFromAppUrl(url);
-        if (route) window.location.assign(route);
+        if (route) navigateToAppRoute(route);
       });
 
       const backButtonListener = await App.addListener('backButton', ({ canGoBack }) => {
