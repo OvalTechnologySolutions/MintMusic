@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "bash scripts/vercel-install.sh",
-  "buildCommand": "npm run build -w @mintmusic/web",
+  "buildCommand": "npm run build -w @mintmusic/shared && npm run build -w @mintmusic/web",
   "outputDirectory": "apps/web/.next",
   "regions": ["iad1"]
 }
