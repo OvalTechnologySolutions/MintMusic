@@ -42,6 +42,12 @@ export class PlaybackEngine {
   private stateListeners = new Set<StateListener>();
   private progressListeners = new Set<ProgressListener>();
 
+  /** Bumps on each load/dispose so in-flight file-load callbacks cannot
+   *  mutate the engine after skip/collect/teardown. */
+  private loadGen = 0;
+  private loadTimeout: number | null = null;
+  private settleLoad: (() => void) | null = null;
+
   get currentState(): PlaybackState {
     return this.state;
   }
@@ -81,6 +87,7 @@ export class PlaybackEngine {
 
   /** Load a song (does not start playback). */
   async load(song: Song): Promise<void> {
+    const gen = ++this.loadGen;
     this.teardown();
     this.song = song;
     this.setState('loading');
@@ -91,18 +98,36 @@ export class PlaybackEngine {
       el.crossOrigin = 'anonymous';
       this.audioEl = el;
       await new Promise<void>((resolve) => {
-        const done = () => resolve();
-        el.addEventListener('canplaythrough', done, { once: true });
-        el.addEventListener('loadeddata', done, { once: true });
-        el.addEventListener('error', () => {
-          this.setState('error');
-          resolve();
-        }, { once: true });
+        this.settleLoad = resolve;
+        const finish = () => {
+          if (gen !== this.loadGen) return;
+          if (this.loadTimeout !== null) {
+            window.clearTimeout(this.loadTimeout);
+            this.loadTimeout = null;
+          }
+          const settle = this.settleLoad;
+          this.settleLoad = null;
+          settle?.();
+        };
+        el.addEventListener('canplaythrough', finish, { once: true });
+        el.addEventListener('loadeddata', finish, { once: true });
+        el.addEventListener(
+          'error',
+          () => {
+            // Setting src='' in teardown fires `error` on the *old* element.
+            // Ignore that so skip/collect cannot mark the next track as failed.
+            if (gen !== this.loadGen) return;
+            this.setState('error');
+            finish();
+          },
+          { once: true },
+        );
         // Safety timeout so we never hang on load.
-        window.setTimeout(done, 1500);
+        this.loadTimeout = window.setTimeout(finish, 1500);
       });
     }
 
+    if (gen !== this.loadGen) return;
     if (this.state !== 'error') this.setState('paused');
   }
 
@@ -140,6 +165,7 @@ export class PlaybackEngine {
   /** Load and immediately attempt to play (used when a new record lands). */
   async loadAndPlay(song: Song): Promise<void> {
     await this.load(song);
+    if (this.song !== song || this.state === 'error') return;
     await this.play();
   }
 
@@ -267,6 +293,14 @@ export class PlaybackEngine {
   }
 
   private teardown() {
+    if (this.loadTimeout !== null) {
+      window.clearTimeout(this.loadTimeout);
+      this.loadTimeout = null;
+    }
+    const settle = this.settleLoad;
+    this.settleLoad = null;
+    settle?.();
+
     this.stopSynth();
     this.stopProgressLoop();
     if (this.audioEl) {
@@ -278,6 +312,7 @@ export class PlaybackEngine {
   }
 
   dispose() {
+    this.loadGen += 1;
     this.teardown();
     this.stateListeners.clear();
     this.progressListeners.clear();
