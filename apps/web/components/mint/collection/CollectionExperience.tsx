@@ -8,6 +8,7 @@ import { useMintReducedMotion } from '../lib/useReducedMotion';
 import { Turntable } from '../player/Turntable';
 import { VinylRecord } from '../player/VinylRecord';
 import { RecordSleeve } from './RecordSleeve';
+import { collectionVinylIntent } from './vinylIntent';
 
 export function CollectionExperience({ onGoDiscover }: { onGoDiscover: () => void }) {
   const { collectedSongs } = useMint();
@@ -25,6 +26,13 @@ export function CollectionExperience({ onGoDiscover }: { onGoDiscover: () => voi
     setPickedId(id);
     await playback.loadAndPlay(song);
     track('collection_track_played', { songId: id });
+  };
+
+  const handleVinylClick = () => {
+    if (!selected) return;
+    const intent = collectionVinylIntent(selected.id, playback.currentSongId);
+    if (intent === 'toggle') void playback.toggle();
+    else void playSong(selected.id);
   };
 
   if (collectedSongs.length === 0) {
@@ -57,7 +65,7 @@ export function CollectionExperience({ onGoDiscover }: { onGoDiscover: () => voi
         <Turntable active={isPlayingSelected} reducedMotion={reducedMotion}>
           {(size) => (
             <button
-              onClick={() => selected && void playback.toggle()}
+              onClick={handleVinylClick}
               className="mint-focus"
               aria-label={isPlayingSelected ? 'Pause' : 'Play'}
             >
