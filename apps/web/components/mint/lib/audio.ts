@@ -42,6 +42,11 @@ export class PlaybackEngine {
   private stateListeners = new Set<StateListener>();
   private progressListeners = new Set<ProgressListener>();
 
+  /** Bumps at the start of play() / pause() / teardown so an in-flight
+   *  play() (e.g. waiting on AudioContext.resume) cannot start a second
+   *  synth graph or revive a song the user already skipped. */
+  private playGen = 0;
+
   get currentState(): PlaybackState {
     return this.state;
   }
@@ -108,16 +113,23 @@ export class PlaybackEngine {
 
   async play(): Promise<void> {
     if (!this.song) return;
+    if (this.state === 'playing') return;
+
+    const gen = ++this.playGen;
+    const song = this.song;
     const ctx = this.ensureCtx();
     if (ctx.state === 'suspended') await ctx.resume();
+    if (gen !== this.playGen || this.song !== song) return;
 
     if (this.song.audioKind === 'file' && this.audioEl) {
       try {
         await this.audioEl.play();
       } catch {
+        if (gen !== this.playGen || this.song !== song) return;
         this.setState('error');
         return;
       }
+      if (gen !== this.playGen || this.song !== song) return;
     } else {
       this.startSynth();
     }
@@ -126,6 +138,7 @@ export class PlaybackEngine {
   }
 
   pause(): void {
+    this.playGen += 1;
     if (this.audioEl) this.audioEl.pause();
     this.stopSynth();
     this.stopProgressLoop();
@@ -267,6 +280,7 @@ export class PlaybackEngine {
   }
 
   private teardown() {
+    this.playGen += 1;
     this.stopSynth();
     this.stopProgressLoop();
     if (this.audioEl) {
