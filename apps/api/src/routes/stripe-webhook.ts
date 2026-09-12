@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import express from 'express';
-import { isStripeConfigured } from '../config.js';
+import { isStripeConfigured, isStripeWebhookConfigured } from '../config.js';
 import { handleStripeWebhook } from '../services/stripe.js';
 
 export const stripeWebhookRouter = Router();
@@ -9,8 +9,8 @@ stripeWebhookRouter.post(
   '/',
   express.raw({ type: 'application/json' }),
   async (req, res) => {
-    if (!isStripeConfigured()) {
-      res.status(503).send('Stripe not configured');
+    if (!isStripeConfigured() || !isStripeWebhookConfigured()) {
+      res.status(503).send('Stripe webhook not configured');
       return;
     }
 

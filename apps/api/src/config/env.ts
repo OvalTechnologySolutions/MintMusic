@@ -98,6 +98,19 @@ export function isStripeConfigured(): boolean {
   return Boolean(env.STRIPE_SECRET_KEY);
 }
 
+/** Checkout can run with only STRIPE_SECRET_KEY. Webhooks must also have a
+ *  signing secret — Stripe's constructEvent('') accepts attacker HMACs. */
+export function isStripeWebhookConfigured(): boolean {
+  return Boolean(env.STRIPE_WEBHOOK_SECRET);
+}
+
+export function assertStripeWebhookSecret(secret: string | undefined): string {
+  if (!secret) {
+    throw new Error('Stripe webhook secret is not configured');
+  }
+  return secret;
+}
+
 export function isDrmConfigured(): boolean {
   return Boolean(
     env.DRM_LICENSE_SERVER_URL ||
