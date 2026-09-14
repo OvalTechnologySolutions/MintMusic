@@ -227,7 +227,27 @@ export async function createReleaseCheckout(
   return { url: session.url, sessionId: session.id };
 }
 
+const FULFILLABLE_CHECKOUT_EVENTS = new Set<Stripe.Event['type']>([
+  'checkout.session.completed',
+  'checkout.session.async_payment_succeeded',
+]);
+
+/** Paid Checkout sessions whose Purchase row we must upsert.
+ *  Cards fire `checkout.session.completed` with payment_status=paid.
+ *  Delayed methods (iDEAL, Bancontact, bank debit, …) fire completed while
+ *  still unpaid, then `checkout.session.async_payment_succeeded` once the
+ *  money actually clears. Ignoring that second event drops the entitlement. */
+export function paidCheckoutSessionFromEvent(
+  event: Pick<Stripe.Event, 'type' | 'data'>
+): Stripe.Checkout.Session | null {
+  if (!FULFILLABLE_CHECKOUT_EVENTS.has(event.type)) return null;
+  const session = event.data.object as Stripe.Checkout.Session;
+  if (session.payment_status !== 'paid') return null;
+  return session;
+}
+
 async function recordReleasePurchase(session: Stripe.Checkout.Session): Promise<void> {
+  if (session.payment_status !== 'paid') return;
   if (session.metadata?.type !== 'release_purchase') return;
   const releaseId = session.metadata.releaseId;
   const collectorUserId = session.metadata.collectorUserId;
@@ -290,10 +310,8 @@ export async function handleStripeWebhook(
     return;
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    if (session.payment_status === 'paid') {
-      await recordReleasePurchase(session);
-    }
+  const session = paidCheckoutSessionFromEvent(event);
+  if (session) {
+    await recordReleasePurchase(session);
   }
 }

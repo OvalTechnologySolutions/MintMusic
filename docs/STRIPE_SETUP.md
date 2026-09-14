@@ -54,7 +54,8 @@ Keep this terminal open while testing checkout.
 
 Events used:
 
-- `checkout.session.completed` → records `Purchase` in Postgres
+- `checkout.session.completed` → records `Purchase` in Postgres when `payment_status=paid` (cards)
+- `checkout.session.async_payment_succeeded` → records `Purchase` when a delayed method (iDEAL, Bancontact, bank debit, …) actually clears
 - `account.updated` → updates creator Connect status
 
 ---
