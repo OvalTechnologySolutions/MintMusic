@@ -27,12 +27,38 @@ function optionalString(minLength?: number) {
   }, minLength ? z.string().min(minLength).optional() : z.string().optional());
 }
 
+/**
+ * Values that have shipped in source / .env.example. Anyone can read them, so
+ * they must never be accepted as INTERNAL_API_SECRET — including the previous
+ * `dev-internal-secret` schema default, which let the API boot with a public key.
+ */
+export const INSECURE_INTERNAL_API_SECRETS = new Set([
+  'dev-internal-secret',
+  'change-me-min-8-chars',
+  'change-me-match-web-env',
+]);
+
+export function assertInternalApiSecret(secret: string | undefined): string {
+  if (!secret || secret.length < 8 || INSECURE_INTERNAL_API_SECRETS.has(secret)) {
+    throw new Error(
+      'INTERNAL_API_SECRET must be a unique secret (openssl rand -base64 32). Public placeholders are rejected.'
+    );
+  }
+  return secret;
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(4000),
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
   API_VERSION: z.string().default('0.2.0'),
-  INTERNAL_API_SECRET: z.string().min(8).default('dev-internal-secret'),
+  INTERNAL_API_SECRET: z
+    .string()
+    .min(8)
+    .refine((value) => !INSECURE_INTERNAL_API_SECRETS.has(value), {
+      message:
+        'INTERNAL_API_SECRET is a public placeholder; generate a unique secret with openssl rand -base64 32',
+    }),
   WEB_URL: z.string().url().default('http://localhost:3000'),
   DATABASE_URL: optionalString(),
   REDIS_URL: optionalString(),
@@ -73,6 +99,9 @@ export function loadEnv(): Env {
     console.error('Invalid environment:', parsed.error.flatten().fieldErrors);
     throw new Error('Invalid environment configuration');
   }
+  // Defense in depth: schema refine already rejects placeholders; keep the
+  // helper as the single source of truth for middleware / tests.
+  assertInternalApiSecret(parsed.data.INTERNAL_API_SECRET);
   return parsed.data;
 }
 
