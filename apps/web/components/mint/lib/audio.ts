@@ -1,3 +1,4 @@
+import { isPlayableFileUrl } from './media-persistence';
 import type { Song } from './types';
 
 export type PlaybackState =
@@ -85,8 +86,13 @@ export class PlaybackEngine {
     this.song = song;
     this.setState('loading');
 
-    if (song.audioKind === 'file' && song.audioUrl) {
-      const el = new Audio(song.audioUrl);
+    if (song.audioKind === 'file') {
+      const url = song.audioUrl;
+      if (!isPlayableFileUrl(url)) {
+        this.setState('error');
+        return;
+      }
+      const el = new Audio(url);
       el.loop = true;
       el.crossOrigin = 'anonymous';
       this.audioEl = el;
@@ -108,10 +114,15 @@ export class PlaybackEngine {
 
   async play(): Promise<void> {
     if (!this.song) return;
+    if (this.state === 'error') return;
     const ctx = this.ensureCtx();
     if (ctx.state === 'suspended') await ctx.resume();
 
-    if (this.song.audioKind === 'file' && this.audioEl) {
+    if (this.song.audioKind === 'file') {
+      if (!this.audioEl) {
+        this.setState('error');
+        return;
+      }
       try {
         await this.audioEl.play();
       } catch {

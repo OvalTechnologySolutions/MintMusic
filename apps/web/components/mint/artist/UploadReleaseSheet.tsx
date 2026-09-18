@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { track } from '../lib/analytics';
+import { putAudioBlob } from '../lib/media-persistence';
 import { GENRES, CREDIT_ROLES } from '../lib/types';
 import type { CreditRole, Genre, Song, SongCredit, SongVersion } from '../lib/types';
 import { Button, Chip, Sheet } from '../ui/primitives';
@@ -135,9 +136,15 @@ export function UploadReleaseSheet({
     setError(null);
     try {
       await runStage('validating', 350);
+      const songId = `up-${Date.now()}`;
       const audioUrl = URL.createObjectURL(audioFile);
       const duration = await readDuration(audioUrl);
-      // simulate upload progress (real impl → Supabase storage)
+      try {
+        await putAudioBlob(songId, audioFile);
+      } catch {
+        // Session playback still works via the object URL; refresh cannot recover.
+      }
+      // simulate upload progress (real impl → object storage)
       setStage('uploading');
       for (let p = 0; p <= 100; p += 20) {
         setProgress(p);
@@ -151,7 +158,7 @@ export function UploadReleaseSheet({
       await runStage('publishing', 350);
       const artUrl = artPreview ?? (await readDataUrl(artFile));
       const song: Song = {
-        id: `up-${Date.now()}`,
+        id: songId,
         title: title.trim(),
         artist: artistName,
         artistSlug: slugify(artistName),

@@ -11,6 +11,11 @@ import {
 } from 'react';
 import { track } from './analytics';
 import { SEED_CATALOG } from './catalog';
+import {
+  clearAudioBlobs,
+  reviveUploads,
+  toDurableUploads,
+} from './media-persistence';
 import type {
   AccessibilitySettings,
   ArtistProfile,
@@ -137,17 +142,33 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
   // cascading-render or mismatch concern despite the batched setState here.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    let cancelled = false;
     setSession(load(KEYS.session, null));
     setListener(load(KEYS.listener, DEFAULT_LISTENER));
     setArtist(load(KEYS.artist, DEFAULT_ARTIST));
     setCollection(load(KEYS.collection, []));
-    setUploads(load(KEYS.uploads, []));
     setEvents(load(KEYS.events, []));
     setPlayback(load(KEYS.playback, DEFAULT_PLAYBACK));
     setA11y(load(KEYS.a11y, DEFAULT_A11Y));
     setTutorialSeen(load(KEYS.tutorial, false));
     setWalletAddressState(load<string | null>(KEYS.wallet, null));
-    setHydrated(true);
+
+    const storedUploads = load<Song[]>(KEYS.uploads, []);
+    setUploads(toDurableUploads(storedUploads));
+    save(KEYS.uploads, toDurableUploads(storedUploads));
+
+    void reviveUploads(storedUploads)
+      .catch(() => toDurableUploads(storedUploads))
+      .then((revived) => {
+        if (!cancelled) setUploads(revived);
+      })
+      .finally(() => {
+        if (!cancelled) setHydrated(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -163,7 +184,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     save(KEYS.listener, listener);
     save(KEYS.artist, artist);
     save(KEYS.collection, collection);
-    save(KEYS.uploads, uploads);
+    save(KEYS.uploads, toDurableUploads(uploads));
     save(KEYS.events, events);
     save(KEYS.playback, playback);
     save(KEYS.a11y, a11y);
@@ -274,6 +295,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     setEvents([]);
     setTutorialSeen(false);
     setWalletAddressState(null);
+    void clearAudioBlobs();
   }, []);
 
   const value: MintState = {
