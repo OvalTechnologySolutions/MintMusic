@@ -213,6 +213,7 @@ export function ProfileSettingsSheet({
           <button
             onClick={() => {
               if (typeof window !== 'undefined' && window.confirm('Delete your account data on this device?')) {
+                playback.pause();
                 deleteAccount();
               }
             }}
