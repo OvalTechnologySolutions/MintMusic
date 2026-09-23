@@ -2,10 +2,11 @@ import { Router } from 'express';
 import type { Request } from 'express';
 import { getPrisma } from '../../lib/prisma.js';
 import { asyncHandler, ensureDatabase } from '../../middleware/async-handler.js';
-import type { AuthedRequest } from '../../middleware/internal-auth.js';
 import { requireInternalUser } from '../../middleware/internal-auth.js';
 import type { DiscoverStoreQuery, DiscoverStoreResponse } from '@mintmusic/shared';
 import { routeParam } from '../../lib/route-param.js';
+import { toPublicArtistDto } from '../cratebuilder/mappers.js';
+import type { Prisma } from '@prisma/client';
 
 export const discoverRouter = Router();
 
@@ -50,6 +51,56 @@ discoverRouter.get(
     };
 
     res.json(response);
+  })
+);
+
+/**
+ * GET /v1/discover/artists — public CrateBuilder discovery allowlist.
+ * Never returns contacts, outreach, or evidence.
+ */
+discoverRouter.get(
+  '/artists',
+  ensureDatabase,
+  asyncHandler(async (req: Request, res) => {
+    const db = await getPrisma();
+    const q = typeof req.query.q === 'string' ? req.query.q : undefined;
+    const genre = typeof req.query.genre === 'string' ? req.query.genre : undefined;
+    const location = typeof req.query.location === 'string' ? req.query.location : undefined;
+    const recent = req.query.recent === 'true' || req.query.recent === '1';
+    const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+    const limit = Math.min(Number(req.query.limit ?? 24), 48);
+
+    const where: Prisma.CbArtistWhereInput = {
+      discoveryVisible: true,
+      suppressedAt: null,
+      ...(q ? { stageName: { contains: q, mode: 'insensitive' } } : {}),
+      ...(genre ? { genres: { has: genre } } : {}),
+      ...(location
+        ? {
+            OR: [
+              { currentCity: { contains: location, mode: 'insensitive' } },
+              { currentRegion: { contains: location, mode: 'insensitive' } },
+              { currentCountry: { contains: location, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+      ...(recent ? { firstDiscoveredAt: { gte: new Date(Date.now() - 14 * 86400000) } } : {}),
+      ...(cursor ? { id: { lt: cursor } } : {}),
+    };
+
+    const rows = await db.cbArtist.findMany({
+      where,
+      orderBy: [{ firstDiscoveredAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+      include: { profiles: true },
+    });
+    const hasMore = rows.length > limit;
+    const slice = hasMore ? rows.slice(0, limit) : rows;
+
+    res.json({
+      artists: slice.map(toPublicArtistDto),
+      nextCursor: hasMore ? slice[slice.length - 1]?.id : undefined,
+    });
   })
 );
 

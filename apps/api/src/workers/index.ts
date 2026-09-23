@@ -1,11 +1,12 @@
 /**
  * Background worker process — run: npm run worker -w @mintmusic/api
  *
- * Handles DRM packaging (Widevine + FairPlay), taste sync, and radio rotation.
+ * Handles DRM packaging, taste sync, radio rotation, and CrateBuilder daily runs.
  */
 import 'dotenv/config';
 import { env } from '../config/env.js';
 import { disconnectPrisma, getPrisma } from '../lib/prisma.js';
+import { runCrateBuilderPipeline } from '../modules/cratebuilder/pipeline.js';
 
 async function processDrmPackage(data: {
   mediaAssetId: string;
@@ -21,11 +22,6 @@ async function processDrmPackage(data: {
     data: { drmStatus: 'packaging' },
   });
 
-  // Production: invoke AWS MediaConvert / Shaka Packager + EZDRM or Axinom
-  // 1. Transcode source → CMAF/fMP4 mezzanine
-  // 2. Encrypt with AES-128-CBC (FairPlay) + AES-CTR (Widevine CENC)
-  // 3. Upload HLS + DASH manifests to S3
-  // 4. Register content key with DRM license provider
   console.info(
     `[drm-package] TODO: package ${data.mediaAssetId} via ${env.DRM_PROVIDER ?? 'aws_mediaconvert'}`
   );
@@ -61,6 +57,41 @@ async function processTasteSync(data: { userId: string }) {
   );
 }
 
+async function processCrateBuilderRun(data: { trigger?: string }) {
+  const db = await getPrisma();
+  const result = await runCrateBuilderPipeline(db, {
+    trigger: data.trigger ?? 'scheduled',
+  });
+  console.info('[cratebuilder-run]', result.runId, result.status, result.summary);
+}
+
+async function registerRepeatableJobs(queue: import('bullmq').Queue) {
+  // 17:00 UTC year-round = fixed EST (UTC−05). Documented alternative: America/New_York (DST).
+  const pattern =
+    env.CRATEBUILDER_TZ_MODE === 'iana'
+      ? env.CRATEBUILDER_CRON
+      : env.CRATEBUILDER_CRON || '0 17 * * *';
+
+  await queue.add(
+    'cratebuilder-run',
+    { trigger: 'scheduled' },
+    {
+      repeat: {
+        pattern,
+        ...(env.CRATEBUILDER_TZ_MODE === 'iana'
+          ? { tz: env.CRATEBUILDER_IANA_TZ }
+          : {}),
+      },
+      jobId: 'cratebuilder-daily',
+      removeOnComplete: 50,
+      removeOnFail: 50,
+    }
+  );
+  console.info(
+    `[cratebuilder] registered repeatable job cron="${pattern}" tzMode=${env.CRATEBUILDER_TZ_MODE}`
+  );
+}
+
 async function main() {
   if (!env.REDIS_URL) {
     console.error('REDIS_URL is required for the worker process');
@@ -72,6 +103,10 @@ async function main() {
   }
 
   const bullmq = await import('bullmq');
+  const connection = { url: env.REDIS_URL };
+  const queue = new bullmq.Queue('mintmusic', { connection });
+  await registerRepeatableJobs(queue);
+
   const worker = new bullmq.Worker(
     'mintmusic',
     async (job) => {
@@ -88,11 +123,14 @@ async function main() {
         case 'transcode':
           console.info('[transcode] TODO: normalize audio/video mezzanine');
           break;
+        case 'cratebuilder-run':
+          await processCrateBuilderRun(job.data as { trigger?: string });
+          break;
         default:
           console.warn(`Unknown job: ${job.name}`);
       }
     },
-    { connection: { url: env.REDIS_URL } }
+    { connection }
   );
 
   worker.on('failed', (job, err) => {

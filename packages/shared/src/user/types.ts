@@ -1,6 +1,6 @@
 import type { SocialLink, SocialLinkInput } from '../social/link.js';
 
-export type UserRole = 'collector' | 'creator';
+export type UserRole = 'collector' | 'creator' | 'admin';
 
 export type CreatorStatus = 'none' | 'pending' | 'approved' | 'rejected';
 

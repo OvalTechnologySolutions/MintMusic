@@ -26,7 +26,8 @@ export type FeatureFlag =
   | 'releases'
   | 'music_moments'
   | 'brand_marketplace'
-  | 'analytics';
+  | 'analytics'
+  | 'cratebuilder';
 
 export interface ApiCapabilitiesResponse {
   version: string;

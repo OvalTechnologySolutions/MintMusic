@@ -14,6 +14,7 @@ import { feedRouter } from '../../modules/collector/feed.routes.js';
 import { discoverRouter } from '../../modules/collector/discover.routes.js';
 import { collectionRouter } from '../../modules/collector/collection.routes.js';
 import { tasteRouter } from '../../modules/collector/taste.routes.js';
+import { cratebuilderRouter } from '../../modules/cratebuilder/routes.js';
 
 export const v1Router = Router();
 
@@ -37,3 +38,6 @@ v1Router.use('/feed', feedRouter);
 v1Router.use('/discover', discoverRouter);
 v1Router.use('/collection', collectionRouter);
 v1Router.use('/taste', tasteRouter);
+
+// CrateBuilder (admin)
+v1Router.use('/cratebuilder', cratebuilderRouter);

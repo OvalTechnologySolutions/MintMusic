@@ -86,3 +86,4 @@ Platforms supported in `@mintmusic/shared`:
 - [MVP Rebuild 2026](./docs/MVP_REBUILD_2026.md)
 - [Security Audit 2026](./docs/SECURITY_AUDIT_2026.md)
 - [Architecture](./docs/ARCHITECTURE.md)
+- [CrateBuilder](./docs/CRATEBUILDER.md) — internal artist discovery, enrichment, outreach, Excel export

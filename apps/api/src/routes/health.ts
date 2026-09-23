@@ -33,6 +33,7 @@ healthRouter.get('/capabilities', (_req, res) => {
       music_moments: 'planned',
       brand_marketplace: 'planned',
       analytics: isDatabaseConfigured() ? 'beta' : 'planned',
+      cratebuilder: isDatabaseConfigured() ? 'beta' : 'planned',
     },
   };
   res.json(body);

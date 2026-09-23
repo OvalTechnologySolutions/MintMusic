@@ -63,6 +63,26 @@ const envSchema = z.object({
   DRM_FAIRPLAY_LA_URL: optionalString(),
   DRM_FAIRPLAY_CERTIFICATE_URL: optionalString(),
   DRM_CONTENT_ID_PREFIX: z.string().default('mintmusic'),
+  // CrateBuilder
+  CRATEBUILDER_ADMIN_EMAILS: z.string().default(''),
+  CRATEBUILDER_CRON: z.string().default('0 17 * * *'),
+  CRATEBUILDER_TZ_MODE: z.enum(['fixed_est', 'iana']).default('fixed_est'),
+  CRATEBUILDER_IANA_TZ: z.string().default('America/New_York'),
+  CRATEBUILDER_MAX_HOPS: z.coerce.number().default(2),
+  CRATEBUILDER_PER_ARTIST_URL_LIMIT: z.coerce.number().default(8),
+  CRATEBUILDER_COMMENT_LIMIT: z.coerce.number().default(50),
+  CRATEBUILDER_TOTAL_URL_BUDGET: z.coerce.number().default(200),
+  CRATEBUILDER_DOMAIN_DELAY_MS: z.coerce.number().default(1000),
+  MUSICBRAINZ_ENABLED: z
+    .preprocess((v) => v === 'true' || v === true, z.boolean())
+    .default(false),
+  MUSICBRAINZ_USER_AGENT: z
+    .string()
+    .default('MintMusic-CrateBuilder/0.1 (https://mintmusic.ai; cratebuilder@mintmusic.ai)'),
+  WIKIDATA_ENABLED: z
+    .preprocess((v) => v === undefined || v === '' || v === 'true' || v === true, z.boolean())
+    .default(true),
+  OPENAI_API_KEY: optionalString(),
 });
 
 export type Env = z.infer<typeof envSchema>;
