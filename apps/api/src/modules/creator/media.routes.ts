@@ -13,13 +13,13 @@ import { enqueueDrmPackaging } from '../../lib/drm/playback.js';
 import { asyncHandler, ensureDatabase } from '../../middleware/async-handler.js';
 import type { AuthedRequest } from '../../middleware/internal-auth.js';
 import { requireInternalUser } from '../../middleware/internal-auth.js';
-import { requireApprovedCreator } from '../../middleware/require-creator.js';
+import { requireApprovedCreator, requireArtistSubscriptionAccess } from '../../middleware/require-creator.js';
 import { NotFoundError } from '../../lib/errors.js';
 import { routeParam } from '../../lib/route-param.js';
 
 export const mediaRouter = Router();
 
-mediaRouter.use(requireInternalUser, ensureDatabase, requireApprovedCreator);
+mediaRouter.use(requireInternalUser, ensureDatabase, requireArtistSubscriptionAccess);
 
 /** POST /v1/media/upload-intent — presigned URL for mp3/wav/mp4 */
 mediaRouter.post(
@@ -85,7 +85,7 @@ mediaRouter.post(
 
 export const catalogRouter = Router();
 
-catalogRouter.use(requireInternalUser, ensureDatabase, requireApprovedCreator);
+catalogRouter.use(requireInternalUser, ensureDatabase, requireArtistSubscriptionAccess);
 
 /** POST /v1/catalog/releases */
 catalogRouter.post(

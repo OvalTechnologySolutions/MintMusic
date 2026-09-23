@@ -68,29 +68,59 @@ collectionRouter.post(
     const body = req.body as PlaybackTokenRequest;
     const db = await getPrisma();
 
-    const owned = await db.purchase.findUnique({
+    const purchase = await db.purchase.findUnique({
       where: {
         collectorId_releaseId: {
           collectorId: req.userId!,
           releaseId: body.releaseId,
         },
       },
+    });
+
+    const release = await db.release.findUnique({
+      where: { id: body.releaseId },
       include: {
-        release: {
-          include: {
-            mediaAsset: true,
-            tracks: { include: { mediaAsset: true } },
-          },
-        },
+        mediaAsset: true,
+        tracks: { include: { mediaAsset: true } },
       },
     });
-    if (!owned) throw new ForbiddenError('You do not own this release');
+    if (!release) throw new NotFoundError('Release not found');
 
-    let mediaAsset = owned.release.mediaAsset;
-    if (body.trackId) {
-      const track = owned.release.tracks.find((t) => t.id === body.trackId);
+    let mediaAsset = release.mediaAsset;
+    let trackId = body.trackId;
+
+    if (trackId) {
+      const track = release.tracks.find((t) => t.id === trackId);
       if (!track) throw new NotFoundError('Track not found on this release');
       mediaAsset = track.mediaAsset;
+
+      if (!purchase) {
+        const entitlement = await db.songEntitlement.findUnique({
+          where: {
+            userId_trackId: { userId: req.userId!, trackId },
+          },
+        });
+        if (!entitlement) {
+          throw new ForbiddenError('You do not have access to this track');
+        }
+      }
+    } else if (!purchase) {
+      // Allow if user has entitlement to any track on the release
+      const anyEntitlement = await db.songEntitlement.findFirst({
+        where: {
+          userId: req.userId!,
+          track: { releaseId: body.releaseId },
+        },
+        include: { track: { include: { mediaAsset: true } } },
+      });
+      if (!anyEntitlement) {
+        throw new ForbiddenError('You do not own this release');
+      }
+      trackId = anyEntitlement.trackId;
+      mediaAsset = anyEntitlement.track.mediaAsset;
+    } else if (release.tracks[0]) {
+      trackId = trackId ?? release.tracks[0].id;
+      mediaAsset = mediaAsset ?? release.tracks[0].mediaAsset;
     }
 
     if (!mediaAsset) {
@@ -103,14 +133,14 @@ collectionRouter.post(
       req.userId!,
       body.releaseId,
       sessionId,
-      { trackId: body.trackId, drmSystem }
+      { trackId, drmSystem }
     );
 
     await db.playbackSession.create({
       data: {
         userId: req.userId!,
         releaseId: body.releaseId,
-        trackId: body.trackId,
+        trackId,
         drmSystem,
         tokenHash: hashToken(token),
         expiresAt,
