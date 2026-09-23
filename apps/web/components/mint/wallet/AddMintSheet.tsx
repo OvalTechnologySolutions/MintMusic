@@ -75,7 +75,7 @@ export function AddMintSheet({
         <p className="text-[14px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
           1 Mint = $1 USD. Mint is closed-loop credit for song saves on MintMusic.
           {pendingTrackTitle
-            ? ` After funding you can return to save “${pendingTrackTitle}”.`
+            ? ` After funding, swipe-collect will resume for “${pendingTrackTitle}”.`
             : ''}
         </p>
 
