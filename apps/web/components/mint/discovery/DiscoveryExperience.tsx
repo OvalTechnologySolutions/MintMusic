@@ -234,7 +234,9 @@ export function DiscoveryExperience({
           setInfoOpen(false);
           if (currentSong) onOpenArtist(currentSong.artistSlug);
         }}
-        savePriceLabel="0.25 Mint"
+        savePriceLabel={
+          currentSong?.saveEligible ? '0.25 Mint' : undefined
+        }
       />
 
       <SaveConfirmSheet
