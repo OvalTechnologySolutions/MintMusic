@@ -1,23 +1,35 @@
 'use client';
 
+import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { MintMusicLogo } from '../brand/MintMusicLogo';
 import type { MintSession } from '../lib/types';
 import { Button } from '../ui/primitives';
 
 /**
- * Minimal, confident landing. No marketing sections.
- * NOTE: For the MVP demo this signs in locally (no external creds required).
- * Production wires "Continue with Google" to Supabase/NextAuth OAuth and email
- * to a magic link. See README → Authentication.
+ * Landing / sign-in. Primary path is NextAuth OAuth.
+ * Local demo sign-in remains for UI exploration without OAuth credentials;
+ * paid Mint features require a real NextAuth session.
  */
-export function AuthLanding({ onSignIn }: { onSignIn: (s: MintSession) => void }) {
-  const [emailMode, setEmailMode] = useState(false);
-  const [email, setEmail] = useState('');
+export function AuthLanding({
+  onSignIn,
+  onDemoSignIn,
+}: {
+  onSignIn?: (s: MintSession) => void;
+  onDemoSignIn?: (s: MintSession) => void;
+}) {
+  const [busy, setBusy] = useState<'google' | 'github' | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const nameFromEmail = (e: string) => {
-    const local = e.split('@')[0] || 'Listener';
-    return local.charAt(0).toUpperCase() + local.slice(1);
+  const oauth = async (provider: 'google' | 'github') => {
+    setBusy(provider);
+    setError(null);
+    try {
+      await signIn(provider, { callbackUrl: '/' });
+    } catch {
+      setError('Sign-in failed. Try again or use demo mode.');
+      setBusy(null);
+    }
   };
 
   return (
@@ -32,69 +44,72 @@ export function AuthLanding({ onSignIn }: { onSignIn: (s: MintSession) => void }
         </p>
 
         <div className="mt-2 flex w-full max-w-[300px] flex-col gap-3">
-          {!emailMode ? (
-            <>
-              <button
-                onClick={() => onSignIn({ email: 'listener@mintmusic.app', name: 'Listener', provider: 'google' })}
-                className="mint-focus flex min-h-[48px] w-full items-center justify-center gap-3 rounded-full bg-white px-5 text-[15px] font-semibold text-[#1a1a1a] transition-opacity hover:opacity-90"
-              >
-                <GoogleGlyph />
-                Continue with Google
-              </button>
-              <Button variant="outline" full onClick={() => setEmailMode(true)}>
-                Continue with email
-              </Button>
-            </>
-          ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return;
-                onSignIn({ email, name: nameFromEmail(email), provider: 'email' });
-              }}
-              className="flex flex-col gap-3"
+          <button
+            disabled={busy !== null}
+            onClick={() => void oauth('google')}
+            className="mint-focus flex min-h-[48px] w-full items-center justify-center gap-3 rounded-full bg-white px-5 text-[15px] font-semibold text-[#1a1a1a] transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            <GoogleGlyph />
+            {busy === 'google' ? 'Continuing…' : 'Continue with Google'}
+          </button>
+          <Button
+            variant="outline"
+            full
+            disabled={busy !== null}
+            onClick={() => void oauth('github')}
+          >
+            {busy === 'github' ? 'Continuing…' : 'Continue with GitHub'}
+          </Button>
+          {onDemoSignIn && (
+            <button
+              type="button"
+              className="text-center text-[12px] underline-offset-2 hover:underline"
+              style={{ color: 'rgba(255,255,255,0.4)' }}
+              onClick={() =>
+                onDemoSignIn({
+                  email: 'listener@mintmusic.app',
+                  name: 'Listener',
+                  provider: 'demo',
+                })
+              }
             >
-              <input
-                type="email"
-                autoFocus
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
-                className="mint-focus min-h-[48px] w-full rounded-full bg-transparent px-5 text-center text-[15px] text-white"
-                style={{ border: '1px solid rgba(255,255,255,0.16)' }}
-              />
-              <Button variant="primary" type="submit" full>
-                Continue
-              </Button>
-              <button
-                type="button"
-                onClick={() => setEmailMode(false)}
-                className="mint-focus text-[13px]"
-                style={{ color: 'rgba(255,255,255,0.5)' }}
-              >
-                ← back
-              </button>
-            </form>
+              Explore demo without account
+            </button>
           )}
         </div>
+        {error && (
+          <p className="max-w-[300px] text-center text-[13px]" style={{ color: '#F07178' }}>
+            {error}
+          </p>
+        )}
+        <p className="max-w-[280px] text-center text-[12px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          Creating an account unlocks discovery and paid song saves (0.25 Mint). It does not grant free
+          Mint.
+        </p>
       </div>
-
-      <footer className="flex gap-6 pb-6 text-[12px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
-        <span>Terms</span>
-        <span>Privacy</span>
-      </footer>
     </main>
   );
 }
 
 function GoogleGlyph() {
   return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
+      <path
+        fill="#FFC107"
+        d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.5-.4-3.5z"
+      />
+      <path
+        fill="#FF3D00"
+        d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.1 29.4 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"
+      />
+      <path
+        fill="#4CAF50"
+        d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.3 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"
+      />
+      <path
+        fill="#1976D2"
+        d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.2-3.5 5.7-6.5 7.1l.1.1 6.2 5.2C38.7 37.3 44 31.5 44 24c0-1.3-.1-2.5-.4-3.5z"
+      />
     </svg>
   );
 }

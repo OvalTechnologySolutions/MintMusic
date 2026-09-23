@@ -86,6 +86,10 @@ export interface Song {
   status: SongStatus;
   eligibleForDiscovery: boolean;
   uploadedByUser?: boolean;
+  /** Server catalog ids when song is backed by MintMusic deliverable media. */
+  releaseId?: string;
+  trackId?: string;
+  saveEligible?: boolean;
 }
 
 export interface ListenerProfile {
@@ -118,7 +122,10 @@ export interface DiscoveryEvent {
 export interface MintSession {
   email: string;
   name: string;
-  provider: 'google' | 'email';
+  provider: 'google' | 'email' | 'github' | 'apple' | 'demo';
+  userId?: string;
+  role?: string;
+  creatorStatus?: string;
 }
 
 export interface PlaybackSettings {

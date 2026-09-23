@@ -22,6 +22,7 @@ export function SongInfoSheet({
   onToggleCollect,
   collected,
   onOpenArtist,
+  savePriceLabel,
 }: {
   song: Song | null;
   open: boolean;
@@ -29,6 +30,7 @@ export function SongInfoSheet({
   onToggleCollect: () => void;
   collected: boolean;
   onOpenArtist: () => void;
+  savePriceLabel?: string;
 }) {
   const isDesktop = useIsDesktop();
   if (!song) return null;
@@ -55,7 +57,11 @@ export function SongInfoSheet({
 
       <div className="mt-5 flex flex-wrap gap-2">
         <Button variant="primary" onClick={onToggleCollect}>
-          {collected ? 'Collected ✓' : 'Collect →'}
+          {collected
+            ? 'Saved ✓'
+            : savePriceLabel
+              ? `Save · ${savePriceLabel}`
+              : 'Save →'}
         </Button>
         <Button variant="outline" onClick={onOpenArtist}>
           Artist Profile

@@ -9,9 +9,22 @@ import { useMintReducedMotion } from '../lib/useReducedMotion';
 import { Turntable } from '../player/Turntable';
 import { GestureCoach } from './GestureCoach';
 import { SongInfoSheet } from './SongInfoSheet';
+import { SaveConfirmSheet } from './SaveConfirmSheet';
 import { SwipeableRecord, type SwipeHandle } from './SwipeableRecord';
 
-export function DiscoveryExperience({ onOpenArtist }: { onOpenArtist: (slug: string) => void }) {
+export function DiscoveryExperience({
+  onOpenArtist,
+  onNeedMint,
+  resumeSaveSong,
+  onResumeSaveHandled,
+  onBalanceMaybeChanged,
+}: {
+  onOpenArtist: (slug: string) => void;
+  onNeedMint?: (song: Song) => void;
+  resumeSaveSong?: Song | null;
+  onResumeSaveHandled?: () => void;
+  onBalanceMaybeChanged?: () => void;
+}) {
   const { catalog, listener, isCollected, collect, uncollect, recordEvent, tutorialSeen, markTutorialSeen, hydrated } =
     useMint();
   const playback = usePlayback();
@@ -20,9 +33,25 @@ export function DiscoveryExperience({ onOpenArtist }: { onOpenArtist: (slug: str
   const [queue, setQueue] = useState<Song[]>([]);
   const [index, setIndex] = useState(0);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveSongTarget, setSaveSongTarget] = useState<Song | null>(null);
+  const [firstSaveExplainer, setFirstSaveExplainer] = useState(true);
   const swipeRef = useRef<SwipeHandle>(null);
   const autoPlayRef = useRef(false);
   const builtRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setFirstSaveExplainer(localStorage.getItem('mint:firstSaveSeen') !== '1');
+  }, []);
+
+  useEffect(() => {
+    if (resumeSaveSong) {
+      setSaveSongTarget(resumeSaveSong);
+      setSaveOpen(true);
+      onResumeSaveHandled?.();
+    }
+  }, [resumeSaveSong, onResumeSaveHandled]);
 
   // Build the discovery queue once: unseen + genre-relevant first, then random.
   useEffect(() => {
@@ -78,10 +107,9 @@ export function DiscoveryExperience({ onOpenArtist }: { onOpenArtist: (slug: str
 
   const handleCollect = useCallback(() => {
     if (!currentSong) return;
-    collect(currentSong);
-    if (!tutorialSeen) markTutorialSeen();
-    advance();
-  }, [currentSong, collect, tutorialSeen, markTutorialSeen, advance]);
+    setSaveSongTarget(currentSong);
+    setSaveOpen(true);
+  }, [currentSong]);
 
   const handleTap = useCallback(async () => {
     autoPlayRef.current = true;
@@ -197,12 +225,34 @@ export function DiscoveryExperience({ onOpenArtist }: { onOpenArtist: (slug: str
         onToggleCollect={() => {
           if (!currentSong) return;
           if (isCollected(currentSong.id)) uncollect(currentSong.id);
-          else collect(currentSong);
+          else {
+            setSaveSongTarget(currentSong);
+            setSaveOpen(true);
+          }
         }}
         onOpenArtist={() => {
           setInfoOpen(false);
           if (currentSong) onOpenArtist(currentSong.artistSlug);
         }}
+        savePriceLabel="0.25 Mint"
+      />
+
+      <SaveConfirmSheet
+        open={saveOpen}
+        song={saveSongTarget}
+        firstSave={firstSaveExplainer}
+        onClose={() => setSaveOpen(false)}
+        onSaved={(song) => {
+          collect(song);
+          if (firstSaveExplainer) {
+            localStorage.setItem('mint:firstSaveSeen', '1');
+            setFirstSaveExplainer(false);
+          }
+          if (!tutorialSeen) markTutorialSeen();
+          onBalanceMaybeChanged?.();
+          advance();
+        }}
+        onNeedMint={(song) => onNeedMint?.(song)}
       />
     </div>
   );
