@@ -19,6 +19,7 @@
     "db:approve-creator": "npm run db:approve-creator -w @mintmusic/api",
     "db:seed-demo-release": "npm run db:seed-demo-release -w @mintmusic/api",
     "db:migrate-users": "npm run db:migrate-users -w @mintmusic/api",
+    "db:migrate-legacy-purchases": "npm run db:migrate-legacy-purchases -w @mintmusic/api",
     "worker": "npm run worker -w @mintmusic/api",
     "lint:web": "npm run lint -w @mintmusic/web",
     "mobile:sync": "npm run sync -w @mintmusic/mobile",

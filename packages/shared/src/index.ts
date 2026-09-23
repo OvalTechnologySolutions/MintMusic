@@ -14,3 +14,4 @@ export * from './domain/collection.js';
 export * from './domain/taste.js';
 export * from './domain/drm.js';
 export * from './domain/broadcast.js';
+export * from './domain/billing.js';
