@@ -28,6 +28,6 @@ export interface PublicUserProfile {
   id: string;
   name: string;
   image?: string;
-  role: 'collector' | 'creator';
+  role: 'collector' | 'creator' | 'admin';
   socialLinks: SocialLink[];
 }

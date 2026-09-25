@@ -14,6 +14,7 @@ datasource db {
 enum UserRole {
   collector
   creator
+  admin
 }
 
 enum CreatorStatus {
@@ -428,4 +429,340 @@ model DrmPackagingJob {
 
   @@index([mediaAssetId, status])
   @@map("drm_packaging_jobs")
+}
+
+// ─── CrateBuilder (artist discovery / outreach foundation) ───
+
+enum CbSourceType {
+  editorial_url
+  social_account
+  playlist
+  manual
+  feed
+}
+
+enum CbEntityType {
+  solo
+  group
+  unknown
+}
+
+enum CbOutreachStatus {
+  not_reviewed
+  ready
+  contacted
+  responded
+  onboarded
+  do_not_contact
+}
+
+enum CbContactKind {
+  booking
+  management
+  inquiries
+  phone
+  form
+  other
+}
+
+enum CbReviewStatus {
+  pending
+  accepted
+  rejected
+  needs_review
+}
+
+enum CbRunStatus {
+  queued
+  running
+  completed
+  completed_partial
+  failed
+  cancelled
+}
+
+enum CbRelationshipType {
+  group_member
+  collaborator
+  manager
+  booking_agent
+  publicist
+  label
+  other
+}
+
+model CbConnectorStatus {
+  id         String   @id
+  enabled    Boolean  @default(false)
+  reason     String?
+  lastError  String?  @map("last_error")
+  lastOkAt   DateTime? @map("last_ok_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("cb_connector_statuses")
+}
+
+model CbSource {
+  id               String       @id @default(cuid())
+  name             String
+  type             CbSourceType
+  url              String?
+  connectorId      String       @map("connector_id")
+  enabled          Boolean      @default(true)
+  configJson       Json         @default("{}") @map("config_json")
+  publicationDate  DateTime?    @map("publication_date")
+  lastFetchedAt    DateTime?    @map("last_fetched_at")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  items CbSourceItem[]
+
+  @@index([enabled, connectorId])
+  @@map("cb_sources")
+}
+
+model CbSourceItem {
+  id          String    @id @default(cuid())
+  sourceId    String    @map("source_id")
+  runId       String?   @map("run_id")
+  externalKey String?   @map("external_key")
+  title       String?
+  url         String?
+  publishedAt DateTime? @map("published_at")
+  payloadHash String?   @map("payload_hash")
+  rawExcerpt  String?   @map("raw_excerpt") @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  source CbSource        @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  run    CbIngestionRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceId, externalKey])
+  @@index([runId])
+  @@map("cb_source_items")
+}
+
+model CbArtist {
+  id                 String           @id @default(cuid())
+  stageName          String           @map("stage_name")
+  entityType         CbEntityType     @default(unknown) @map("entity_type")
+  bio                String?          @db.Text
+  genres             String[]         @default([])
+  hometownCity       String?          @map("hometown_city")
+  hometownRegion     String?          @map("hometown_region")
+  hometownCountry    String?          @map("hometown_country")
+  currentCity        String?          @map("current_city")
+  currentRegion      String?          @map("current_region")
+  currentCountry     String?          @map("current_country")
+  website            String?
+  linkInBioUrl       String?          @map("link_in_bio_url")
+  firstDiscoveredAt  DateTime         @default(now()) @map("first_discovered_at")
+  discoveryVisible   Boolean          @default(false) @map("discovery_visible")
+  emergingStatus     String?          @map("emerging_status")
+  outreachStatus     CbOutreachStatus @default(not_reviewed) @map("outreach_status")
+  outreachNotes      String?          @map("outreach_notes") @db.Text
+  outreachAssignedTo String?          @map("outreach_assigned_to")
+  preferredContactId String?          @unique @map("preferred_contact_id")
+  linkedUserId       String?          @map("linked_user_id")
+  adminLockedFields  String[]         @default([]) @map("admin_locked_fields")
+  suppressedAt       DateTime?        @map("suppressed_at")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  preferredContact CbContact?      @relation("PreferredContact", fields: [preferredContactId], references: [id], onDelete: SetNull)
+  aliases          CbAlias[]
+  externalIds      CbExternalId[]
+  profiles         CbProfile[]
+  contacts         CbContact[]     @relation("ArtistContacts")
+  observations     CbObservation[]
+  relationshipsFrom CbRelationship[] @relation("RelFrom")
+  relationshipsTo   CbRelationship[] @relation("RelTo")
+  reviewItems      CbReviewQueueItem[]
+
+  @@index([stageName])
+  @@index([firstDiscoveredAt])
+  @@index([outreachStatus])
+  @@index([discoveryVisible])
+  @@map("cb_artists")
+}
+
+model CbAlias {
+  id        String   @id @default(cuid())
+  artistId  String   @map("artist_id")
+  alias     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  artist CbArtist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId, alias])
+  @@index([alias])
+  @@map("cb_aliases")
+}
+
+model CbExternalId {
+  id         String   @id @default(cuid())
+  artistId   String   @map("artist_id")
+  provider   String
+  externalId String   @map("external_id")
+  url        String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  artist CbArtist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalId])
+  @@index([artistId])
+  @@map("cb_external_ids")
+}
+
+model CbProfile {
+  id                String   @id @default(cuid())
+  artistId          String   @map("artist_id")
+  platform          String
+  url               String
+  handle            String?
+  externalAccountId String?  @map("external_account_id")
+  verified          Boolean  @default(false)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  artist CbArtist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId, platform, url])
+  @@index([platform, handle])
+  @@map("cb_profiles")
+}
+
+model CbContact {
+  id                 String        @id @default(cuid())
+  artistId           String        @map("artist_id")
+  kind               CbContactKind
+  value              String
+  role               String?
+  representativeName String?       @map("representative_name")
+  organization       String?
+  verified           Boolean       @default(false)
+  preferred          Boolean       @default(false)
+  suppressed         Boolean       @default(false)
+  suppressedAt       DateTime?     @map("suppressed_at")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  artist              CbArtist  @relation("ArtistContacts", fields: [artistId], references: [id], onDelete: Cascade)
+  preferredForArtist  CbArtist? @relation("PreferredContact")
+
+  @@index([artistId, kind])
+  @@index([value])
+  @@map("cb_contacts")
+}
+
+model CbRelationship {
+  id             String              @id @default(cuid())
+  fromArtistId   String              @map("from_artist_id")
+  toArtistId     String              @map("to_artist_id")
+  type           CbRelationshipType
+  label          String?
+  evidenceId     String?             @map("evidence_id")
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  fromArtist CbArtist @relation("RelFrom", fields: [fromArtistId], references: [id], onDelete: Cascade)
+  toArtist   CbArtist @relation("RelTo", fields: [toArtistId], references: [id], onDelete: Cascade)
+
+  @@unique([fromArtistId, toArtistId, type])
+  @@map("cb_relationships")
+}
+
+model CbObservation {
+  id           String         @id @default(cuid())
+  artistId     String?        @map("artist_id")
+  field        String
+  value        String         @db.Text
+  sourceUrl    String?        @map("source_url")
+  sourceType   String?        @map("source_type")
+  retrievedAt  DateTime       @default(now()) @map("retrieved_at")
+  excerpt      String?        @db.Text
+  method       String
+  confidence   Float          @default(0.5)
+  explanation  String?        @db.Text
+  reviewStatus CbReviewStatus @default(pending) @map("review_status")
+  runId        String?        @map("run_id")
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  artist CbArtist?       @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  run    CbIngestionRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  @@index([artistId, field])
+  @@index([reviewStatus])
+  @@map("cb_observations")
+}
+
+model CbReviewQueueItem {
+  id          String         @id @default(cuid())
+  artistId    String?        @map("artist_id")
+  kind        String
+  title       String
+  detail      String?        @db.Text
+  payloadJson Json           @default("{}") @map("payload_json")
+  status      CbReviewStatus @default(needs_review)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  resolvedAt  DateTime?      @map("resolved_at")
+
+  artist CbArtist? @relation(fields: [artistId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@map("cb_review_queue_items")
+}
+
+model CbIngestionRun {
+  id              String      @id @default(cuid())
+  status          CbRunStatus @default(queued)
+  trigger         String      @default("manual")
+  lockToken       String?     @unique @map("lock_token")
+  scheduledFor    DateTime?   @map("scheduled_for")
+  startedAt       DateTime?   @map("started_at")
+  completedAt     DateTime?   @map("completed_at")
+  checkpointJson  Json        @default("{}") @map("checkpoint_json")
+  coverageNotes   String?     @map("coverage_notes") @db.Text
+  summaryJson     Json        @default("{}") @map("summary_json")
+  errorMessage    String?     @map("error_message") @db.Text
+  partialFailure  Boolean     @default(false) @map("partial_failure")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  sourceItems  CbSourceItem[]
+  observations CbObservation[]
+  visitedUrls  CbVisitedUrl[]
+  exports      CbExport[]
+
+  @@index([status, createdAt])
+  @@map("cb_ingestion_runs")
+}
+
+model CbVisitedUrl {
+  id        String   @id @default(cuid())
+  runId     String   @map("run_id")
+  url       String
+  hopDepth  Int      @default(0) @map("hop_depth")
+  status    String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  run CbIngestionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, url])
+  @@map("cb_visited_urls")
+}
+
+model CbExport {
+  id           String   @id @default(cuid())
+  runId        String?  @map("run_id")
+  filename     String
+  storageKey   String   @map("storage_key")
+  exportDate   DateTime @map("export_date") @db.Date
+  complete     Boolean  @default(true)
+  isLatest     Boolean  @default(false) @map("is_latest")
+  byteSize     Int?     @map("byte_size")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  run CbIngestionRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  @@index([exportDate])
+  @@index([isLatest])
+  @@map("cb_exports")
 }

@@ -7,7 +7,8 @@ export type JobName =
   | 'drm-package'
   | 'taste-sync'
   | 'radio-rotate'
-  | 'transcode';
+  | 'transcode'
+  | 'cratebuilder-run';
 
 export async function enqueueJob(
   name: JobName,
