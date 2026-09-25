@@ -44,6 +44,7 @@ function mapUser(
     stripeConnectAccountId: row.stripeConnectAccountId ?? undefined,
     stripeConnectChargesEnabled: row.stripeConnectChargesEnabled,
     stripeConnectPayoutsEnabled: row.stripeConnectPayoutsEnabled,
+    stripeCustomerId: row.stripeCustomerId ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -93,6 +94,11 @@ export async function upsertOAuthUser(input: OAuthSyncRequest): Promise<User> {
       },
       include: { socialLinks: true },
     });
+    await db.wallet.upsert({
+      where: { userId: row.id },
+      create: { userId: row.id, balanceUnits: 0 },
+      update: {},
+    });
     return mapUser(row);
   }
 
@@ -103,6 +109,7 @@ export async function upsertOAuthUser(input: OAuthSyncRequest): Promise<User> {
       image: input.image,
       provider: input.provider,
       providerAccountId: input.providerAccountId,
+      wallet: { create: { balanceUnits: 0 } },
     },
     include: { socialLinks: true },
   });

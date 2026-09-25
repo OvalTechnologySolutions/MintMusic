@@ -14,6 +14,10 @@ import { feedRouter } from '../../modules/collector/feed.routes.js';
 import { discoverRouter } from '../../modules/collector/discover.routes.js';
 import { collectionRouter } from '../../modules/collector/collection.routes.js';
 import { tasteRouter } from '../../modules/collector/taste.routes.js';
+import { walletRouter, mintRouter } from '../../modules/wallet/wallet.routes.js';
+import { libraryRouter, offlineRouter } from '../../modules/library/library.routes.js';
+import { artistSubscriptionRouter } from '../../modules/artist/subscription.routes.js';
+import { streamRouter } from '../../modules/media/stream.routes.js';
 
 export const v1Router = Router();
 
@@ -37,3 +41,11 @@ v1Router.use('/feed', feedRouter);
 v1Router.use('/discover', discoverRouter);
 v1Router.use('/collection', collectionRouter);
 v1Router.use('/taste', tasteRouter);
+
+// Mint wallet, library, artist subscription, offline, stream
+v1Router.use('/wallet', walletRouter);
+v1Router.use('/mint', mintRouter);
+v1Router.use('/library', libraryRouter);
+v1Router.use('/offline', offlineRouter);
+v1Router.use('/artist/subscription', artistSubscriptionRouter);
+v1Router.use('/stream', streamRouter);

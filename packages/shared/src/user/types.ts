@@ -16,6 +16,7 @@ export interface User {
   stripeConnectAccountId?: string;
   stripeConnectChargesEnabled?: boolean;
   stripeConnectPayoutsEnabled?: boolean;
+  stripeCustomerId?: string;
   createdAt: string;
   updatedAt: string;
 }

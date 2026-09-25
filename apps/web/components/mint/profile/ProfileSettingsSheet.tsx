@@ -34,11 +34,19 @@ export function ProfileSettingsSheet({
   onClose,
   onViewArtist,
   onManageUploads,
+  onOpenWallet,
+  onOpenHistory,
+  onSignOut,
+  balanceUnits,
 }: {
   open: boolean;
   onClose: () => void;
   onViewArtist: () => void;
   onManageUploads: () => void;
+  onOpenWallet?: () => void;
+  onOpenHistory?: () => void;
+  onSignOut?: () => void;
+  balanceUnits?: number | null;
 }) {
   const {
     session,
@@ -173,7 +181,21 @@ export function ProfileSettingsSheet({
         </button>
       </Section>
 
-      <Section title="Wallet">
+      <Section title="Mint wallet">
+        <p className="mb-3 text-[13px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          Balance:{' '}
+          <span style={{ color: 'var(--mint-primary)' }}>
+            {typeof balanceUnits === 'number' ? `${(balanceUnits / 100).toFixed(2)} Mint` : '—'}
+          </span>
+        </p>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Button variant="outline" onClick={onOpenWallet}>
+            Add Mint
+          </Button>
+          <Button variant="outline" onClick={onOpenHistory}>
+            Activity
+          </Button>
+        </div>
         <WalletCapability />
       </Section>
 
@@ -185,7 +207,7 @@ export function ProfileSettingsSheet({
           <li>3. Tap “Add”</li>
         </ol>
         <p className="mt-3 text-[12px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          MintMusic · v0.2.0
+          MintMusic · v0.2.0 · Offline downloads use app-managed cache (not DRM).
         </p>
       </Section>
 
@@ -205,7 +227,8 @@ export function ProfileSettingsSheet({
             variant="outline"
             onClick={() => {
               playback.pause();
-              signOut();
+              if (onSignOut) onSignOut();
+              else signOut();
             }}
           >
             Sign out

@@ -9,12 +9,18 @@ import { Turntable } from '../player/Turntable';
 import { VinylRecord } from '../player/VinylRecord';
 import { RecordSleeve } from './RecordSleeve';
 
-export function CollectionExperience({ onGoDiscover }: { onGoDiscover: () => void }) {
-  const { collectedSongs } = useMint();
+export function CollectionExperience({
+  onGoDiscover,
+  userId,
+}: {
+  onGoDiscover: () => void;
+  userId?: string;
+}) {
+  const { collectedSongs, uncollect } = useMint();
   const playback = usePlayback();
   const reducedMotion = useMintReducedMotion();
   const [pickedId, setPickedId] = useState<string | null>(null);
-  // Derive the active record so we never sync state in an effect.
+  const [offlineMsg, setOfflineMsg] = useState<string | null>(null);
   const selectedId = pickedId ?? collectedSongs[0]?.id ?? null;
   const selected = collectedSongs.find((s) => s.id === selectedId) ?? null;
   const isPlayingSelected = playback.isPlaying && playback.currentSongId === selected?.id;
@@ -25,6 +31,34 @@ export function CollectionExperience({ onGoDiscover }: { onGoDiscover: () => voi
     setPickedId(id);
     await playback.loadAndPlay(song);
     track('collection_track_played', { songId: id });
+  };
+
+  const downloadOffline = async () => {
+    if (!userId || !selected?.trackId || !selected.audioUrl) {
+      setOfflineMsg(
+        'Offline download is available for entitled MintMusic deliveries with playable media.'
+      );
+      return;
+    }
+    setOfflineMsg('Downloading…');
+    const { cacheTrackOffline } = await import('../lib/offline');
+    const result = await cacheTrackOffline({
+      userId,
+      trackId: selected.trackId,
+      url: selected.audioUrl,
+    });
+    setOfflineMsg(
+      result.ok
+        ? `Available offline (${Math.round((result.bytes ?? 0) / 1024)} KB). Entitlement unchanged.`
+        : result.error ?? 'Download failed'
+    );
+  };
+
+  const removeOffline = async () => {
+    if (!userId || !selected?.trackId) return;
+    const { removeOfflineTrack } = await import('../lib/offline');
+    await removeOfflineTrack(userId, selected.trackId);
+    setOfflineMsg('Removed local audio. Your paid entitlement remains.');
   };
 
   if (collectedSongs.length === 0) {
@@ -79,6 +113,37 @@ export function CollectionExperience({ onGoDiscover }: { onGoDiscover: () => voi
             <p className="text-[13px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
               {selected.artist}
             </p>
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => void downloadOffline()}
+                className="mint-focus rounded-full px-3 py-2 text-[12px]"
+                style={{ background: 'rgba(255,255,255,0.08)' }}
+              >
+                Download for offline
+              </button>
+              <button
+                type="button"
+                onClick={() => void removeOffline()}
+                className="mint-focus rounded-full px-3 py-2 text-[12px]"
+                style={{ background: 'rgba(255,255,255,0.06)' }}
+              >
+                Remove offline
+              </button>
+              <button
+                type="button"
+                onClick={() => selected && uncollect(selected.id)}
+                className="mint-focus rounded-full px-3 py-2 text-[12px]"
+                style={{ background: 'rgba(255,255,255,0.06)' }}
+              >
+                Hide from crate
+              </button>
+            </div>
+            {offlineMsg && (
+              <p className="mt-2 max-w-xs text-[12px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                {offlineMsg}
+              </p>
+            )}
           </div>
         )}
       </div>

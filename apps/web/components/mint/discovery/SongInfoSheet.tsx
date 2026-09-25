@@ -22,6 +22,8 @@ export function SongInfoSheet({
   onToggleCollect,
   collected,
   onOpenArtist,
+  savePriceLabel,
+  collectBusy,
 }: {
   song: Song | null;
   open: boolean;
@@ -29,6 +31,8 @@ export function SongInfoSheet({
   onToggleCollect: () => void;
   collected: boolean;
   onOpenArtist: () => void;
+  savePriceLabel?: string;
+  collectBusy?: boolean;
 }) {
   const isDesktop = useIsDesktop();
   if (!song) return null;
@@ -54,13 +58,24 @@ export function SongInfoSheet({
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <Button variant="primary" onClick={onToggleCollect}>
-          {collected ? 'Collected ✓' : 'Collect →'}
+        <Button variant="primary" onClick={onToggleCollect} disabled={collectBusy}>
+          {collected
+            ? 'Collected ✓'
+            : collectBusy
+              ? 'Collecting…'
+              : savePriceLabel
+                ? `Collect · ${savePriceLabel}`
+                : 'Collect →'}
         </Button>
         <Button variant="outline" onClick={onOpenArtist}>
           Artist Profile
         </Button>
       </div>
+      {!collected && savePriceLabel && (
+        <p className="mt-3 text-[12px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          Or swipe right on the record to collect.
+        </p>
+      )}
 
       <div className="mt-6">
         {song.releaseDate && <Row label="Release" value={song.releaseDate} />}

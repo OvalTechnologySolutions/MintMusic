@@ -4,7 +4,9 @@ import { apiAsUser } from './server-api';
 function errorStatus(message: string): number {
   if (message === 'Unauthorized') return 401;
   if (message.includes('not found') || message.includes('Not found')) return 404;
-  if (message.includes('already own')) return 409;
+  if (message.includes('already own') || message.includes('already been redeemed')) return 409;
+  if (message.includes('Insufficient Mint') || message.includes('Need ')) return 402;
+  if (message.includes('Forbidden') || message.includes('deficit')) return 403;
   return 400;
 }
 
