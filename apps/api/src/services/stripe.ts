@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { config, isStripeConfigured } from '../config.js';
+import { assertStripeWebhookSecret } from '../config/env.js';
 import { isDatabaseConfigured } from '../config/env.js';
 import { findUserById, setStripeConnect } from '../store/users.js';
 
@@ -269,11 +270,12 @@ export async function handleStripeWebhook(
   rawBody: Buffer,
   signature: string
 ): Promise<void> {
+  const webhookSecret = assertStripeWebhookSecret(config.stripeWebhookSecret);
   const client = getStripe();
   const event = client.webhooks.constructEvent(
     rawBody,
     signature,
-    config.stripeWebhookSecret
+    webhookSecret
   );
 
   if (event.type === 'account.updated') {

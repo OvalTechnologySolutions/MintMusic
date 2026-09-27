@@ -1,4 +1,8 @@
-import { env as loadedEnv, isStripeConfigured as checkStripe } from './env.js';
+import {
+  env as loadedEnv,
+  isStripeConfigured as checkStripe,
+  isStripeWebhookConfigured as checkStripeWebhook,
+} from './env.js';
 
 /** @deprecated Prefer importing from config/env.js */
 export const config = {
@@ -14,6 +18,10 @@ export const config = {
 
 export function isStripeConfigured(): boolean {
   return checkStripe();
+}
+
+export function isStripeWebhookConfigured(): boolean {
+  return checkStripeWebhook();
 }
 
 export { loadedEnv as env };
