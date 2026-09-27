@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { config, isStripeConfigured } from '../config.js';
 import { isDatabaseConfigured } from '../config/env.js';
+import { assertSafeCheckoutReturnUrl } from '../lib/checkout-url.js';
 import { findUserById, setStripeConnect } from '../store/users.js';
 
 let stripe: Stripe | null = null;
@@ -94,6 +95,8 @@ export async function createDonationCheckout(
   cancelUrl: string
 ): Promise<{ url: string; sessionId: string }> {
   if (amountCents < 100) throw new Error('Minimum donation is $1.00');
+  assertSafeCheckoutReturnUrl(successUrl, config.webUrl);
+  assertSafeCheckoutReturnUrl(cancelUrl, config.webUrl);
 
   const creator = await findUserById(creatorUserId);
   if (!creator?.stripeConnectAccountId) {
@@ -144,6 +147,9 @@ export async function createReleaseCheckout(
   successUrl: string,
   cancelUrl: string
 ): Promise<{ url: string; sessionId: string }> {
+  assertSafeCheckoutReturnUrl(successUrl, config.webUrl);
+  assertSafeCheckoutReturnUrl(cancelUrl, config.webUrl);
+
   if (!isDatabaseConfigured()) {
     throw new Error('Database not configured');
   }

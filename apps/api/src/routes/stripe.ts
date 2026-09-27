@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Response } from 'express';
 import type {
   CreateDonationCheckoutRequest,
   CreateCheckoutResponse,
@@ -6,7 +6,8 @@ import type {
 } from '@mintmusic/shared';
 import type { AuthedRequest } from '../middleware/internal-auth.js';
 import { requireInternalUser } from '../middleware/internal-auth.js';
-import { isStripeConfigured } from '../config.js';
+import { config, isStripeConfigured } from '../config.js';
+import { assertSafeCheckoutReturnUrl } from '../lib/checkout-url.js';
 import {
   createConnectOnboardingLink,
   createDonationCheckout,
@@ -58,16 +59,33 @@ stripeRouter.get(
   }
 );
 
+function rejectUnsafeReturnUrls(
+  successUrl: string | undefined,
+  cancelUrl: string | undefined,
+  res: Response
+): boolean {
+  try {
+    assertSafeCheckoutReturnUrl(successUrl ?? '', config.webUrl);
+    assertSafeCheckoutReturnUrl(cancelUrl ?? '', config.webUrl);
+    return false;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Invalid return URL';
+    res.status(400).json({ error: message });
+    return true;
+  }
+}
+
 /** Donation checkout — collector session forwarded via BFF */
 stripeRouter.post('/checkout/donation', async (req, res) => {
-  if (!isStripeConfigured()) {
-    res.status(503).json({ error: 'Stripe not configured' });
-    return;
-  }
-
   const body = req.body as CreateDonationCheckoutRequest;
   if (!body?.creatorUserId || !body?.amountCents || body.amountCents < 100) {
     res.status(400).json({ error: 'Invalid donation amount' });
+    return;
+  }
+  if (rejectUnsafeReturnUrls(body.successUrl, body.cancelUrl, res)) return;
+
+  if (!isStripeConfigured()) {
+    res.status(503).json({ error: 'Stripe not configured' });
     return;
   }
 
@@ -97,14 +115,15 @@ stripeRouter.post(
   '/checkout/release',
   requireInternalUser,
   async (req: AuthedRequest, res) => {
-    if (!isStripeConfigured()) {
-      res.status(503).json({ error: 'Stripe not configured' });
-      return;
-    }
-
     const body = req.body as CreateReleaseCheckoutRequest;
     if (!body?.releaseId || !body?.successUrl || !body?.cancelUrl) {
       res.status(400).json({ error: 'releaseId, successUrl, and cancelUrl are required' });
+      return;
+    }
+    if (rejectUnsafeReturnUrls(body.successUrl, body.cancelUrl, res)) return;
+
+    if (!isStripeConfigured()) {
+      res.status(503).json({ error: 'Stripe not configured' });
       return;
     }
 
