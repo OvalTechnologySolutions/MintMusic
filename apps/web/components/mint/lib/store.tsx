@@ -11,6 +11,14 @@ import {
 } from 'react';
 import { track } from './analytics';
 import { SEED_CATALOG } from './catalog';
+import {
+  STORAGE_KEYS,
+  deleteAccountSlices,
+  loadAccountSlice,
+  readStorage,
+  saveAccountSlice,
+  writeStorage,
+} from './storage';
 import type {
   AccessibilitySettings,
   ArtistProfile,
@@ -23,38 +31,6 @@ import type {
   PlaybackSettings,
   Song,
 } from './types';
-
-const KEYS = {
-  session: 'mint:session',
-  listener: 'mint:listener',
-  artist: 'mint:artist',
-  collection: 'mint:collection',
-  uploads: 'mint:uploads',
-  events: 'mint:events',
-  playback: 'mint:playback',
-  a11y: 'mint:a11y',
-  tutorial: 'mint:tutorialSeen',
-  wallet: 'mint:wallet',
-} as const;
-
-function load<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function save<T>(key: string, value: T): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* ignore quota / private mode */
-  }
-}
 
 const DEFAULT_LISTENER: ListenerProfile = {
   displayName: '',
@@ -137,16 +113,20 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
   // cascading-render or mismatch concern despite the batched setState here.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    setSession(load(KEYS.session, null));
-    setListener(load(KEYS.listener, DEFAULT_LISTENER));
-    setArtist(load(KEYS.artist, DEFAULT_ARTIST));
-    setCollection(load(KEYS.collection, []));
-    setUploads(load(KEYS.uploads, []));
-    setEvents(load(KEYS.events, []));
-    setPlayback(load(KEYS.playback, DEFAULT_PLAYBACK));
-    setA11y(load(KEYS.a11y, DEFAULT_A11Y));
-    setTutorialSeen(load(KEYS.tutorial, false));
-    setWalletAddressState(load<string | null>(KEYS.wallet, null));
+    const storedSession = readStorage<MintSession | null>(STORAGE_KEYS.session, null);
+    const email = storedSession?.email ?? null;
+    setSession(storedSession);
+    setListener(loadAccountSlice(STORAGE_KEYS.listener, email, DEFAULT_LISTENER));
+    setArtist(loadAccountSlice(STORAGE_KEYS.artist, email, DEFAULT_ARTIST));
+    setCollection(loadAccountSlice(STORAGE_KEYS.collection, email, []));
+    setUploads(loadAccountSlice(STORAGE_KEYS.uploads, email, []));
+    setEvents(loadAccountSlice(STORAGE_KEYS.events, email, []));
+    setPlayback(readStorage(STORAGE_KEYS.playback, DEFAULT_PLAYBACK));
+    setA11y(readStorage(STORAGE_KEYS.a11y, DEFAULT_A11Y));
+    setTutorialSeen(readStorage(STORAGE_KEYS.tutorial, false));
+    setWalletAddressState(
+      loadAccountSlice<string | null>(STORAGE_KEYS.wallet, email, null),
+    );
     setHydrated(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -159,16 +139,17 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
       first.current = false;
       return;
     }
-    save(KEYS.session, session);
-    save(KEYS.listener, listener);
-    save(KEYS.artist, artist);
-    save(KEYS.collection, collection);
-    save(KEYS.uploads, uploads);
-    save(KEYS.events, events);
-    save(KEYS.playback, playback);
-    save(KEYS.a11y, a11y);
-    save(KEYS.tutorial, tutorialSeen);
-    save(KEYS.wallet, walletAddress);
+    const email = session?.email ?? null;
+    writeStorage(STORAGE_KEYS.session, session);
+    saveAccountSlice(STORAGE_KEYS.listener, email, listener);
+    saveAccountSlice(STORAGE_KEYS.artist, email, artist);
+    saveAccountSlice(STORAGE_KEYS.collection, email, collection);
+    saveAccountSlice(STORAGE_KEYS.uploads, email, uploads);
+    saveAccountSlice(STORAGE_KEYS.events, email, events);
+    writeStorage(STORAGE_KEYS.playback, playback);
+    writeStorage(STORAGE_KEYS.a11y, a11y);
+    writeStorage(STORAGE_KEYS.tutorial, tutorialSeen);
+    saveAccountSlice(STORAGE_KEYS.wallet, email, walletAddress);
   }, [hydrated, session, listener, artist, collection, uploads, events, playback, a11y, tutorialSeen, walletAddress]);
 
   const catalog = useMemo<Song[]>(() => {
@@ -194,13 +175,39 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     setEvents((prev) => [...prev.slice(-499), { songId, type, at: new Date().toISOString() }]);
   }, []);
 
-  const signIn = useCallback((s: MintSession) => {
-    setSession(s);
-    setListener((prev) => ({ ...prev, displayName: prev.displayName || s.name }));
-    track('auth_completed', { provider: s.provider });
+  const applyAccount = useCallback((email: string | null | undefined, displayName?: string) => {
+    const loadedListener = loadAccountSlice(STORAGE_KEYS.listener, email, DEFAULT_LISTENER);
+    setListener({
+      ...loadedListener,
+      displayName: loadedListener.displayName || displayName || '',
+    });
+    setArtist(loadAccountSlice(STORAGE_KEYS.artist, email, DEFAULT_ARTIST));
+    setCollection(loadAccountSlice(STORAGE_KEYS.collection, email, []));
+    setUploads(loadAccountSlice(STORAGE_KEYS.uploads, email, []));
+    setEvents(loadAccountSlice(STORAGE_KEYS.events, email, []));
+    setWalletAddressState(
+      loadAccountSlice<string | null>(STORAGE_KEYS.wallet, email, null),
+    );
   }, []);
 
-  const signOut = useCallback(() => setSession(null), []);
+  const signIn = useCallback(
+    (s: MintSession) => {
+      setSession(s);
+      applyAccount(s.email, s.name);
+      track('auth_completed', { provider: s.provider });
+    },
+    [applyAccount],
+  );
+
+  const signOut = useCallback(() => {
+    setSession(null);
+    setListener(DEFAULT_LISTENER);
+    setArtist(DEFAULT_ARTIST);
+    setCollection([]);
+    setUploads([]);
+    setEvents([]);
+    setWalletAddressState(null);
+  }, []);
 
   const completeOnboarding = useCallback(
     (genres: Genre[], artists: string[], displayName: string) => {
@@ -266,6 +273,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
   const resetTutorial = useCallback(() => setTutorialSeen(false), []);
 
   const deleteAccount = useCallback(() => {
+    deleteAccountSlices(session?.email);
     setSession(null);
     setListener(DEFAULT_LISTENER);
     setArtist(DEFAULT_ARTIST);
@@ -274,7 +282,7 @@ export function MintProvider({ children }: { children: React.ReactNode }) {
     setEvents([]);
     setTutorialSeen(false);
     setWalletAddressState(null);
-  }, []);
+  }, [session?.email]);
 
   const value: MintState = {
     hydrated,
