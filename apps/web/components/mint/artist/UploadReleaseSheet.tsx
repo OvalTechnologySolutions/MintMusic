@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { track } from '../lib/analytics';
+import { prepareArtworkDataUrl, validateArtworkFile } from '../lib/artwork';
 import { GENRES, CREDIT_ROLES } from '../lib/types';
 import type { CreditRole, Genre, Song, SongCredit, SongVersion } from '../lib/types';
 import { Button, Chip, Sheet } from '../ui/primitives';
@@ -29,15 +30,6 @@ function readDuration(url: string): Promise<number> {
     el.addEventListener('loadedmetadata', () => resolve(el.duration || 24), { once: true });
     el.addEventListener('error', () => resolve(24), { once: true });
     window.setTimeout(() => resolve(24), 1500);
-  });
-}
-
-function readDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
-    r.onerror = reject;
-    r.readAsDataURL(file);
   });
 }
 
@@ -89,12 +81,18 @@ export function UploadReleaseSheet({
   const onArtPick = async (f: File | null) => {
     setError(null);
     if (!f) return;
-    if (f.type !== 'image/png' && !/\.png$/i.test(f.name)) {
-      setError('Artwork must be a PNG.');
+    const invalid = validateArtworkFile(f);
+    if (invalid) {
+      setError(invalid);
       return;
     }
-    setArtFile(f);
-    setArtPreview(await readDataUrl(f));
+    try {
+      const preview = await prepareArtworkDataUrl(f);
+      setArtFile(f);
+      setArtPreview(preview);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not read artwork.');
+    }
   };
 
   const reset = () => {
@@ -149,7 +147,7 @@ export function UploadReleaseSheet({
       track('song_upload_completed');
 
       await runStage('publishing', 350);
-      const artUrl = artPreview ?? (await readDataUrl(artFile));
+      const artUrl = artPreview ?? (await prepareArtworkDataUrl(artFile));
       const song: Song = {
         id: `up-${Date.now()}`,
         title: title.trim(),
