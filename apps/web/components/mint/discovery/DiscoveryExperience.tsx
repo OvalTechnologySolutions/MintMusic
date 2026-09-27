@@ -8,6 +8,7 @@ import type { Song } from '../lib/types';
 import { useMintReducedMotion } from '../lib/useReducedMotion';
 import { Turntable } from '../player/Turntable';
 import { GestureCoach } from './GestureCoach';
+import { willExhaustDiscoverQueue } from './queue';
 import { SongInfoSheet } from './SongInfoSheet';
 import { SwipeableRecord, type SwipeHandle } from './SwipeableRecord';
 
@@ -73,15 +74,18 @@ export function DiscoveryExperience({ onOpenArtist }: { onOpenArtist: (slug: str
     recordEvent(currentSong.id, 'skip');
     track('track_skipped', { songId: currentSong.id });
     if (!tutorialSeen) markTutorialSeen();
+    // Last record: stop audio so the empty state is not a ghost player.
+    if (willExhaustDiscoverQueue(index, queue.length)) playback.pause();
     advance();
-  }, [currentSong, recordEvent, tutorialSeen, markTutorialSeen, advance]);
+  }, [currentSong, recordEvent, tutorialSeen, markTutorialSeen, advance, index, queue.length, playback]);
 
   const handleCollect = useCallback(() => {
     if (!currentSong) return;
     collect(currentSong);
     if (!tutorialSeen) markTutorialSeen();
+    if (willExhaustDiscoverQueue(index, queue.length)) playback.pause();
     advance();
-  }, [currentSong, collect, tutorialSeen, markTutorialSeen, advance]);
+  }, [currentSong, collect, tutorialSeen, markTutorialSeen, advance, index, queue.length, playback]);
 
   const handleTap = useCallback(async () => {
     autoPlayRef.current = true;
