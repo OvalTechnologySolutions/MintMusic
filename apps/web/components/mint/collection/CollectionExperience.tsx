@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { track } from '../lib/analytics';
+import { resolveCollectionPlayIntent } from '../lib/collection-play';
 import { usePlayback } from '../lib/playback';
 import { useMint } from '../lib/store';
 import { useMintReducedMotion } from '../lib/useReducedMotion';
@@ -25,6 +26,18 @@ export function CollectionExperience({ onGoDiscover }: { onGoDiscover: () => voi
     setPickedId(id);
     await playback.loadAndPlay(song);
     track('collection_track_played', { songId: id });
+  };
+
+  const handleTurntableClick = () => {
+    if (!selected) return;
+    const intent = resolveCollectionPlayIntent(selected.id, playback.currentSongId);
+    if (intent === 'toggle') {
+      void playback.toggle();
+      return;
+    }
+    if (intent === 'play-selected') {
+      void playSong(selected.id);
+    }
   };
 
   if (collectedSongs.length === 0) {
@@ -57,7 +70,7 @@ export function CollectionExperience({ onGoDiscover }: { onGoDiscover: () => voi
         <Turntable active={isPlayingSelected} reducedMotion={reducedMotion}>
           {(size) => (
             <button
-              onClick={() => selected && void playback.toggle()}
+              onClick={handleTurntableClick}
               className="mint-focus"
               aria-label={isPlayingSelected ? 'Pause' : 'Play'}
             >
