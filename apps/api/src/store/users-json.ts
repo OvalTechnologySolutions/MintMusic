@@ -7,7 +7,7 @@ import type {
   UserRole,
 } from '@mintmusic/shared';
 import { ConflictError } from '../lib/errors.js';
-import { readJson, writeJson } from './json-db.js';
+import { readJson, updateJson } from './json-db.js';
 import {
   assertValidSocialLinks,
   mapSocialLinkInputs,
@@ -33,10 +33,6 @@ async function load(): Promise<UserRecord[]> {
   return readJson<UserRecord[]>(FILE, []);
 }
 
-async function save(users: UserRecord[]): Promise<void> {
-  await writeJson(FILE, users);
-}
-
 function newId(): string {
   return `usr_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -60,80 +56,86 @@ export async function findUserRecordById(
 }
 
 export async function upsertOAuthUser(input: OAuthSyncRequest): Promise<User> {
-  const users = await load();
-  const now = new Date().toISOString();
-  const existingIdx = users.findIndex(
-    (u) => u.email.toLowerCase() === input.email.toLowerCase()
-  );
+  let result: User | undefined;
+  await updateJson<UserRecord[]>(FILE, [], (users) => {
+    const now = new Date().toISOString();
+    const existingIdx = users.findIndex(
+      (u) => u.email.toLowerCase() === input.email.toLowerCase()
+    );
 
-  if (existingIdx >= 0) {
-    const existing = users[existingIdx];
-    if (
-      existing.provider !== input.provider ||
-      existing.providerAccountId !== input.providerAccountId
-    ) {
-      throw new ConflictError(
-        'This email is already registered with a different sign-in method'
-      );
+    if (existingIdx >= 0) {
+      const existing = users[existingIdx];
+      if (
+        existing.provider !== input.provider ||
+        existing.providerAccountId !== input.providerAccountId
+      ) {
+        throw new ConflictError(
+          'This email is already registered with a different sign-in method'
+        );
+      }
+      users[existingIdx] = {
+        ...existing,
+        name: input.name || existing.name,
+        image: input.image ?? existing.image,
+        socialLinks: existing.socialLinks ?? [],
+        updatedAt: now,
+      };
+      result = toPublicUser(users[existingIdx]);
+      return users;
     }
-    users[existingIdx] = {
-      ...existing,
-      name: input.name || existing.name,
-      image: input.image ?? existing.image,
-      socialLinks: existing.socialLinks ?? [],
+
+    const user: UserRecord = {
+      id: newId(),
+      email: input.email,
+      name: input.name,
+      image: input.image,
+      role: 'collector',
+      creatorStatus: 'none',
+      socialLinks: [],
+      provider: input.provider,
+      providerAccountId: input.providerAccountId,
+      createdAt: now,
       updatedAt: now,
     };
-    await save(users);
-    return toPublicUser(users[existingIdx]);
-  }
-
-  const user: UserRecord = {
-    id: newId(),
-    email: input.email,
-    name: input.name,
-    image: input.image,
-    role: 'collector',
-    creatorStatus: 'none',
-    socialLinks: [],
-    provider: input.provider,
-    providerAccountId: input.providerAccountId,
-    createdAt: now,
-    updatedAt: now,
-  };
-  users.push(user);
-  await save(users);
-  return toPublicUser(user);
+    users.push(user);
+    result = toPublicUser(user);
+    return users;
+  });
+  return result!;
 }
 
 export async function updateUser(
   id: string,
   patch: UpdateUserRequest
 ): Promise<User | null> {
-  const users = await load();
-  const idx = users.findIndex((u) => u.id === id);
-  if (idx < 0) return null;
+  let result: User | null = null;
+  await updateJson<UserRecord[]>(FILE, [], (users) => {
+    const idx = users.findIndex((u) => u.id === id);
+    if (idx < 0) return users;
 
-  const now = new Date().toISOString();
-  const current = users[idx];
+    const now = new Date().toISOString();
+    const current = users[idx];
 
-  if (patch.socialLinks) {
-    assertValidSocialLinks(patch.socialLinks);
-  }
+    if (patch.socialLinks) {
+      assertValidSocialLinks(patch.socialLinks);
+    }
 
-  users[idx] = {
-    ...current,
-    name: patch.name ?? current.name,
-    walletAddress:
-      patch.walletAddress === null
-        ? undefined
-        : patch.walletAddress ?? current.walletAddress,
-    socialLinks: patch.socialLinks
-      ? mapSocialLinkInputs(patch.socialLinks, current.socialLinks ?? [])
-      : current.socialLinks ?? [],
-    updatedAt: now,
-  };
-  await save(users);
-  return toPublicUser(users[idx]);
+    users[idx] = {
+      ...current,
+      name: patch.name ?? current.name,
+      walletAddress:
+        patch.walletAddress === null
+          ? undefined
+          : patch.walletAddress ?? current.walletAddress,
+      socialLinks: patch.socialLinks
+        ? mapSocialLinkInputs(patch.socialLinks, current.socialLinks ?? [])
+        : current.socialLinks ?? [],
+      updatedAt: now,
+    };
+    result = toPublicUser(users[idx]);
+    return users;
+  });
+  return result;
 }
 
 export async function setCreatorStatus(
@@ -141,19 +143,22 @@ export async function setCreatorStatus(
   status: CreatorStatus,
   role?: UserRole
 ): Promise<User | null> {
-  const users = await load();
-  const idx = users.findIndex((u) => u.id === id);
-  if (idx < 0) return null;
+  let result: User | null = null;
+  await updateJson<UserRecord[]>(FILE, [], (users) => {
+    const idx = users.findIndex((u) => u.id === id);
+    if (idx < 0) return users;
 
-  const now = new Date().toISOString();
-  users[idx] = {
-    ...users[idx],
-    creatorStatus: status,
-    role: role ?? users[idx].role,
-    updatedAt: now,
-  };
-  await save(users);
-  return toPublicUser(users[idx]);
+    const now = new Date().toISOString();
+    users[idx] = {
+      ...users[idx],
+      creatorStatus: status,
+      role: role ?? users[idx].role,
+      updatedAt: now,
+    };
+    result = toPublicUser(users[idx]);
+    return users;
+  });
+  return result;
 }
 
 export async function setStripeConnect(
@@ -162,20 +167,23 @@ export async function setStripeConnect(
   chargesEnabled: boolean,
   payoutsEnabled: boolean
 ): Promise<User | null> {
-  const users = await load();
-  const idx = users.findIndex((u) => u.id === id);
-  if (idx < 0) return null;
+  let result: User | null = null;
+  await updateJson<UserRecord[]>(FILE, [], (users) => {
+    const idx = users.findIndex((u) => u.id === id);
+    if (idx < 0) return users;
 
-  const now = new Date().toISOString();
-  users[idx] = {
-    ...users[idx],
-    stripeConnectAccountId: accountId,
-    stripeConnectChargesEnabled: chargesEnabled,
-    stripeConnectPayoutsEnabled: payoutsEnabled,
-    updatedAt: now,
-  };
-  await save(users);
-  return toPublicUser(users[idx]);
+    const now = new Date().toISOString();
+    users[idx] = {
+      ...users[idx],
+      stripeConnectAccountId: accountId,
+      stripeConnectChargesEnabled: chargesEnabled,
+      stripeConnectPayoutsEnabled: payoutsEnabled,
+      updatedAt: now,
+    };
+    result = toPublicUser(users[idx]);
+    return users;
+  });
+  return result;
 }
 
 function toPublicUser(record: UserRecord): User {
@@ -214,34 +222,47 @@ export async function getAccountDeletionRequest(userId: string) {
 }
 
 export async function requestAccountDeletion(userId: string) {
-  const requests = await readJson<AccountDeletionRequestRecord[]>(DELETION_REQUESTS_FILE, []);
-  const now = new Date().toISOString();
-  const existing = requests.find((request) => request.userId === userId);
-  if (existing) {
-    existing.status = 'pending';
-    existing.requestedAt = now;
-    existing.updatedAt = now;
-    await writeJson(DELETION_REQUESTS_FILE, requests);
-    return existing;
-  }
-  const request: AccountDeletionRequestRecord = {
-    id: `del_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-    userId,
-    status: 'pending',
-    requestedAt: now,
-    updatedAt: now,
-  };
-  requests.push(request);
-  await writeJson(DELETION_REQUESTS_FILE, requests);
-  return request;
+  let result: AccountDeletionRequestRecord | undefined;
+  await updateJson<AccountDeletionRequestRecord[]>(
+    DELETION_REQUESTS_FILE,
+    [],
+    (requests) => {
+      const now = new Date().toISOString();
+      const existing = requests.find((request) => request.userId === userId);
+      if (existing) {
+        existing.status = 'pending';
+        existing.requestedAt = now;
+        existing.updatedAt = now;
+        result = existing;
+        return requests;
+      }
+      const request: AccountDeletionRequestRecord = {
+        id: `del_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        userId,
+        status: 'pending',
+        requestedAt: now,
+        updatedAt: now,
+      };
+      requests.push(request);
+      result = request;
+      return requests;
+    }
+  );
+  return result!;
 }
 
 export async function cancelAccountDeletion(userId: string): Promise<boolean> {
-  const requests = await readJson<AccountDeletionRequestRecord[]>(DELETION_REQUESTS_FILE, []);
-  const remaining = requests.filter((request) => request.userId !== userId);
-  if (remaining.length === requests.length) return false;
-  await writeJson(DELETION_REQUESTS_FILE, remaining);
-  return true;
+  let cancelled = false;
+  await updateJson<AccountDeletionRequestRecord[]>(
+    DELETION_REQUESTS_FILE,
+    [],
+    (requests) => {
+      const remaining = requests.filter((request) => request.userId !== userId);
+      cancelled = remaining.length !== requests.length;
+      return remaining;
+    }
+  );
+  return cancelled;
 }
 
 /** Export all JSON users for migration */
