@@ -5,9 +5,10 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
-import { PlaybackEngine, type PlaybackState } from './audio';
+import { ensurePlaybackEngine, type PlaybackEngine, type PlaybackState } from './audio';
 import type { Song } from './types';
 
 interface PlaybackContextValue {
@@ -25,17 +26,18 @@ interface PlaybackContextValue {
 const PlaybackContext = createContext<PlaybackContextValue | null>(null);
 
 export function PlaybackProvider({ children }: { children: React.ReactNode }) {
-  // Lazy-create a single engine (client only). useState initializer keeps it
-  // stable across renders without touching a ref during render.
-  const [engine] = useState<PlaybackEngine | null>(() =>
-    typeof window !== 'undefined' ? new PlaybackEngine() : null,
-  );
+  const engineRef = useRef<PlaybackEngine | null>(null);
+  const getEngine = () => {
+    engineRef.current = ensurePlaybackEngine(engineRef.current);
+    return engineRef.current;
+  };
 
   const [state, setState] = useState<PlaybackState>('idle');
   const [progress, setProgress] = useState(0);
   const [currentSongId, setCurrentSongId] = useState<string | null>(null);
 
   useEffect(() => {
+    const engine = getEngine();
     if (!engine) return;
     const offState = engine.onState((s) => {
       setState(s);
@@ -46,8 +48,9 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
       offState();
       offProgress();
       engine.dispose();
+      engineRef.current = null;
     };
-  }, [engine]);
+  }, []);
 
   const value = useMemo<PlaybackContextValue>(() => {
     return {
@@ -57,17 +60,17 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
       isPlaying: state === 'playing',
       load: async (song) => {
         setCurrentSongId(song.id);
-        await engine?.load(song);
+        await getEngine()?.load(song);
       },
       loadAndPlay: async (song) => {
         setCurrentSongId(song.id);
-        await engine?.loadAndPlay(song);
+        await getEngine()?.loadAndPlay(song);
       },
-      play: async () => engine?.play(),
-      pause: () => engine?.pause(),
-      toggle: async () => engine?.toggle(),
+      play: async () => getEngine()?.play(),
+      pause: () => getEngine()?.pause(),
+      toggle: async () => getEngine()?.toggle(),
     };
-  }, [engine, state, progress, currentSongId]);
+  }, [state, progress, currentSongId]);
 
   return <PlaybackContext.Provider value={value}>{children}</PlaybackContext.Provider>;
 }
