@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { PlaybackEngine } from '../components/mint/lib/audio';
+import { ensurePlaybackEngine, PlaybackEngine } from '../components/mint/lib/audio';
 import type { Song } from '../components/mint/lib/types';
 
 class FakeParam {
@@ -124,5 +124,35 @@ describe('PlaybackEngine synth teardown', () => {
     expect(secondWave.slice(0, 4).every((o) => !o.stopped)).toBe(true);
 
     engine.dispose();
+  });
+});
+
+describe('ensurePlaybackEngine (SSR hydration)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns null during SSR when window is missing', () => {
+    vi.stubGlobal('window', undefined);
+    expect(ensurePlaybackEngine(null)).toBeNull();
+  });
+
+  it('creates an engine on the client after a window-less SSR snapshot', () => {
+    vi.stubGlobal('window', undefined);
+    // Hydration keeps the SSR snapshot (`null` in useState). The engine must
+    // still be creatable on the first client call — otherwise play is a no-op.
+    const ssrSnapshot = ensurePlaybackEngine(null);
+    expect(ssrSnapshot).toBeNull();
+
+    vi.stubGlobal('window', {
+      AudioContext: FakeAudioContext,
+      webkitAudioContext: FakeAudioContext,
+      setTimeout: globalThis.setTimeout.bind(globalThis),
+      clearTimeout: globalThis.clearTimeout.bind(globalThis),
+    });
+    const engine = ensurePlaybackEngine(ssrSnapshot);
+    expect(engine).toBeInstanceOf(PlaybackEngine);
+    expect(ensurePlaybackEngine(engine)).toBe(engine);
+    engine?.dispose();
   });
 });

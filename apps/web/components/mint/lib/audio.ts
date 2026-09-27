@@ -14,6 +14,19 @@ type ProgressListener = (fraction: number) => void;
 const SCALE = [0, 3, 5, 7, 10, 12, 10, 7]; // minor-pentatonic-ish arp pattern
 
 /**
+ * Create the browser audio engine. Must not be stored in useState from a
+ * `typeof window` check: Next.js SSRs the player tree, so that state is
+ * `null` on the server and stays `null` after hydration — play/pause no-op.
+ */
+export function ensurePlaybackEngine(
+  current: PlaybackEngine | null,
+): PlaybackEngine | null {
+  if (current) return current;
+  if (typeof window === 'undefined') return null;
+  return new PlaybackEngine();
+}
+
+/**
  * One persistent audio engine for the whole app.
  * - Seed songs are synthesized (a warm pad + gentle arpeggio) via Web Audio.
  * - Uploaded songs ('file') play their real audio through an <audio> element.
