@@ -103,7 +103,10 @@ export class PlaybackEngine {
       });
     }
 
-    if (this.state !== 'error') this.setState('paused');
+    // Discover calls load() on each record, then the user can tap play
+    // before canplaythrough/timeout. play() already set `playing` and
+    // started <audio> — do not clobber that back to paused.
+    if (this.state !== 'error' && this.state !== 'playing') this.setState('paused');
   }
 
   async play(): Promise<void> {
