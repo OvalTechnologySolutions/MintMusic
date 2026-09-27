@@ -23,6 +23,8 @@ export function DiscoveryExperience({ onOpenArtist }: { onOpenArtist: (slug: str
   const swipeRef = useRef<SwipeHandle>(null);
   const autoPlayRef = useRef(false);
   const builtRef = useRef(false);
+  const playbackRef = useRef(playback);
+  playbackRef.current = playback;
 
   // Build the discovery queue once: unseen + genre-relevant first, then random.
   useEffect(() => {
@@ -52,6 +54,14 @@ export function DiscoveryExperience({ onOpenArtist }: { onOpenArtist: (slug: str
   }, [catalog, isCollected]);
 
   const currentSong = queue[index] ?? null;
+
+  // Shared engine keeps playing after this view unmounts. Pause so Collection
+  // does not keep the next Discover record audible behind a different vinyl.
+  useEffect(() => {
+    return () => {
+      playbackRef.current.pause();
+    };
+  }, []);
 
   // Load each record as it lands; continue playing once the user has started.
   useEffect(() => {
