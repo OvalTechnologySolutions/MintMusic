@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Web3Provider from '@/components/Web3Provider';
 import { ArtistExperience } from './artist/ArtistExperience';
 import { MintMusicMark } from './brand/MintMusicMark';
@@ -10,7 +10,8 @@ import { AuthLanding } from './landing/AuthLanding';
 import { OnboardingSheet } from './landing/OnboardingSheet';
 import { CrateBackground } from './layout/CrateBackground';
 import { TopBar, type AppMode } from './layout/TopBar';
-import { PlaybackProvider } from './lib/playback';
+import { PlaybackProvider, usePlayback } from './lib/playback';
+import { haltPlaybackIfSignedOut } from './lib/session-playback';
 import { MintProvider, useMint } from './lib/store';
 import { ProfileSettingsSheet } from './profile/ProfileSettingsSheet';
 
@@ -29,10 +30,20 @@ function BrandLoader() {
 
 function Shell() {
   const { hydrated, session, listener, artist, signIn } = useMint();
+  const playback = usePlayback();
+  const pauseRef = useRef(playback.pause);
+  pauseRef.current = playback.pause;
   const [mode, setMode] = useState<AppMode>('discover');
   const [profileOpen, setProfileOpen] = useState(false);
   const [publicSlug, setPublicSlug] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+
+  // Delete account / sign-out unmounts the player chrome but leaves
+  // PlaybackProvider mounted. Halt the engine so AuthLanding cannot
+  // keep playing a track the listener can no longer pause.
+  useEffect(() => {
+    haltPlaybackIfSignedOut(hydrated, session, () => pauseRef.current());
+  }, [hydrated, session]);
 
   if (!hydrated) return <BrandLoader />;
   if (!session) return <AuthLanding onSignIn={signIn} />;
