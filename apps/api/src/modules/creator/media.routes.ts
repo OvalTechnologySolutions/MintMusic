@@ -15,6 +15,7 @@ import type { AuthedRequest } from '../../middleware/internal-auth.js';
 import { requireInternalUser } from '../../middleware/internal-auth.js';
 import { requireApprovedCreator } from '../../middleware/require-creator.js';
 import { NotFoundError } from '../../lib/errors.js';
+import { toJsonSafe } from '../../lib/json-safe.js';
 import { routeParam } from '../../lib/route-param.js';
 
 export const mediaRouter = Router();
@@ -196,6 +197,6 @@ catalogRouter.get(
       orderBy: { createdAt: 'desc' },
       include: { tracks: { include: { mediaAsset: true } } },
     });
-    res.json({ releases });
+    res.json(toJsonSafe({ releases }));
   })
 );
