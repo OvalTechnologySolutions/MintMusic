@@ -2,6 +2,10 @@ import Stripe from 'stripe';
 import { config, isStripeConfigured } from '../config.js';
 import { isDatabaseConfigured } from '../config/env.js';
 import { findUserById, setStripeConnect } from '../store/users.js';
+import {
+  fulfillPaidReleasePurchase,
+  releaseCheckoutIdempotencyKey,
+} from './release-purchase.js';
 
 let stripe: Stripe | null = null;
 
@@ -186,27 +190,35 @@ export async function createReleaseCheckout(
   }
 
   const client = getStripe();
-  const session = await client.checkout.sessions.create({
-    mode: 'payment',
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: release.currency,
-          unit_amount: release.priceCents,
-          product_data: {
-            name: release.title,
-            description: `${release.type} by ${release.creator.name}`,
-            ...(release.coverUrl ? { images: [release.coverUrl] } : {}),
+  const session = await client.checkout.sessions.create(
+    {
+      mode: 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: release.currency,
+            unit_amount: release.priceCents,
+            product_data: {
+              name: release.title,
+              description: `${release.type} by ${release.creator.name}`,
+              ...(release.coverUrl ? { images: [release.coverUrl] } : {}),
+            },
           },
         },
-      },
-    ],
-    payment_intent_data: {
-      transfer_data: {
-        destination: creator.stripeConnectAccountId,
+      ],
+      payment_intent_data: {
+        transfer_data: {
+          destination: creator.stripeConnectAccountId,
+        },
+        metadata: {
+          type: 'release_purchase',
+          releaseId,
+          collectorUserId,
+          creatorUserId: release.creatorId,
+        },
       },
       metadata: {
         type: 'release_purchase',
@@ -215,13 +227,8 @@ export async function createReleaseCheckout(
         creatorUserId: release.creatorId,
       },
     },
-    metadata: {
-      type: 'release_purchase',
-      releaseId,
-      collectorUserId,
-      creatorUserId: release.creatorId,
-    },
-  });
+    { idempotencyKey: releaseCheckoutIdempotencyKey(collectorUserId, releaseId) }
+  );
 
   if (!session.url) throw new Error('Failed to create checkout session');
   return { url: session.url, sessionId: session.id };
@@ -245,24 +252,70 @@ async function recordReleasePurchase(session: Stripe.Checkout.Session): Promise<
     typeof session.payment_intent === 'string'
       ? session.payment_intent
       : session.payment_intent?.id;
+  const paymentId = paymentIntentId ?? session.id;
 
-  await db.purchase.upsert({
-    where: {
-      collectorId_releaseId: {
-        collectorId: collectorUserId,
-        releaseId,
-      },
-    },
-    create: {
-      collectorId: collectorUserId,
-      releaseId,
-      stripePaymentId: paymentIntentId ?? session.id,
-      amountCents: session.amount_total ?? release.priceCents,
-    },
-    update: {
-      stripePaymentId: paymentIntentId ?? session.id,
-    },
+  await fulfillPaidReleasePurchase({
+    collectorUserId,
+    releaseId,
+    paymentId,
+    amountCents: session.amount_total ?? release.priceCents,
+    createPurchase: (data) => db.purchase.create({ data }),
+    findPurchase: () =>
+      db.purchase.findUnique({
+        where: {
+          collectorId_releaseId: {
+            collectorId: collectorUserId,
+            releaseId,
+          },
+        },
+      }),
+    refundPayment: refundDuplicateReleasePayment,
   });
+}
+
+async function refundDuplicateReleasePayment(paymentId: string): Promise<void> {
+  const client = getStripe();
+  const paymentIntentId = paymentId.startsWith('pi_')
+    ? paymentId
+    : await paymentIntentIdFromCheckoutSession(client, paymentId);
+
+  if (!paymentIntentId) {
+    console.error(
+      '[stripe] duplicate release payment has no payment_intent to refund',
+      paymentId
+    );
+    return;
+  }
+
+  try {
+    await client.refunds.create(
+      {
+        payment_intent: paymentIntentId,
+        reverse_transfer: true,
+      },
+      { idempotencyKey: `refund-dup-release:${paymentIntentId}` }
+    );
+  } catch (err) {
+    if (isAlreadyRefunded(err)) return;
+    throw err;
+  }
+}
+
+async function paymentIntentIdFromCheckoutSession(
+  client: Stripe,
+  sessionId: string
+): Promise<string | undefined> {
+  if (!sessionId.startsWith('cs_')) return undefined;
+  const session = await client.checkout.sessions.retrieve(sessionId);
+  return typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.payment_intent?.id;
+}
+
+function isAlreadyRefunded(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false;
+  const code = 'code' in err ? (err as { code?: unknown }).code : undefined;
+  return code === 'charge_already_refunded';
 }
 
 export async function handleStripeWebhook(
