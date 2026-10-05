@@ -13,6 +13,7 @@ import { radioRouter } from '../../modules/creator/radio.routes.js';
 import { feedRouter } from '../../modules/collector/feed.routes.js';
 import { discoverRouter } from '../../modules/collector/discover.routes.js';
 import { collectionRouter } from '../../modules/collector/collection.routes.js';
+import { streamRouter } from '../../modules/collector/stream.routes.js';
 import { tasteRouter } from '../../modules/collector/taste.routes.js';
 
 export const v1Router = Router();
@@ -36,4 +37,5 @@ v1Router.use('/radio', radioRouter);
 v1Router.use('/feed', feedRouter);
 v1Router.use('/discover', discoverRouter);
 v1Router.use('/collection', collectionRouter);
+v1Router.use('/stream', streamRouter);
 v1Router.use('/taste', tasteRouter);

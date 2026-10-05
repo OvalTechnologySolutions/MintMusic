@@ -9,9 +9,10 @@ import {
   createPlaybackToken,
   hashToken,
   newSessionId,
+  playbackStreamUrl,
 } from '../../lib/playback-token.js';
 import { buildDrmPlaybackUrls } from '../../lib/drm/playback.js';
-import { getPublicStreamUrl } from '../../lib/storage/s3.js';
+import { publicApiOrigin } from '../../lib/public-origin.js';
 import { asyncHandler, ensureDatabase } from '../../middleware/async-handler.js';
 import type { AuthedRequest } from '../../middleware/internal-auth.js';
 import { requireInternalUser } from '../../middleware/internal-auth.js';
@@ -153,7 +154,7 @@ collectionRouter.post(
       return;
     }
 
-    const streamUrl = `${getPublicStreamUrl(mediaAsset.storageKey)}?token=${token}`;
+    const streamUrl = playbackStreamUrl(publicApiOrigin(req), token);
     res.json({
       sessionId,
       streamUrl,

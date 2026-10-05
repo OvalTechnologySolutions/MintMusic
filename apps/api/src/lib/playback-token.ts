@@ -47,21 +47,37 @@ export function createPlaybackToken(
 
 export function verifyPlaybackToken(token: string): PlaybackClaims | null {
   if (!env.PLAYBACK_JWT_SECRET) return null;
-  const [body, sig] = token.split('.');
-  if (!body || !sig) return null;
-  const expected = createHmac('sha256', env.PLAYBACK_JWT_SECRET)
-    .update(body)
-    .digest('base64url');
   try {
-    if (!timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+    const [body, sig] = token.split('.');
+    if (!body || !sig) return null;
+    const expected = createHmac('sha256', env.PLAYBACK_JWT_SECRET)
+      .update(body)
+      .digest('base64url');
+    const sigBuf = Buffer.from(sig);
+    const expectedBuf = Buffer.from(expected);
+    if (sigBuf.length !== expectedBuf.length) return null;
+    if (!timingSafeEqual(sigBuf, expectedBuf)) return null;
+    const claims = JSON.parse(
+      Buffer.from(body, 'base64url').toString('utf8')
+    ) as PlaybackClaims;
+    if (
+      !claims.sub ||
+      !claims.releaseId ||
+      typeof claims.exp !== 'number' ||
+      claims.exp < Math.floor(Date.now() / 1000)
+    ) {
+      return null;
+    }
+    return claims;
   } catch {
     return null;
   }
-  const claims = JSON.parse(
-    Buffer.from(body, 'base64url').toString('utf8')
-  ) as PlaybackClaims;
-  if (claims.exp < Math.floor(Date.now() / 1000)) return null;
-  return claims;
+}
+
+/** Browser-fetchable stream URL. The token is the capability; nothing else is in the path. */
+export function playbackStreamUrl(origin: string, token: string): string {
+  const base = origin.replace(/\/$/, '');
+  return `${base}/v1/stream?token=${encodeURIComponent(token)}`;
 }
 
 export function hashToken(token: string): string {
