@@ -17,6 +17,7 @@ import type { AuthedRequest } from '../../middleware/internal-auth.js';
 import { requireInternalUser } from '../../middleware/internal-auth.js';
 import { ForbiddenError, NotFoundError } from '../../lib/errors.js';
 import { routeParam } from '../../lib/route-param.js';
+import { resolvePlaybackMedia } from './resolve-playback-media.js';
 
 export const collectionRouter = Router();
 
@@ -79,20 +80,21 @@ collectionRouter.post(
         release: {
           include: {
             mediaAsset: true,
-            tracks: { include: { mediaAsset: true } },
+            tracks: {
+              include: { mediaAsset: true },
+              orderBy: { trackNumber: 'asc' },
+            },
           },
         },
       },
     });
     if (!owned) throw new ForbiddenError('You do not own this release');
 
-    let mediaAsset = owned.release.mediaAsset;
-    if (body.trackId) {
-      const track = owned.release.tracks.find((t) => t.id === body.trackId);
-      if (!track) throw new NotFoundError('Track not found on this release');
-      mediaAsset = track.mediaAsset;
+    const resolved = resolvePlaybackMedia(owned.release, body.trackId);
+    if (resolved.trackMissing) {
+      throw new NotFoundError('Track not found on this release');
     }
-
+    const mediaAsset = resolved.mediaAsset;
     if (!mediaAsset) {
       throw new NotFoundError('No playable media for this release');
     }
@@ -103,14 +105,14 @@ collectionRouter.post(
       req.userId!,
       body.releaseId,
       sessionId,
-      { trackId: body.trackId, drmSystem }
+      { trackId: resolved.trackId, drmSystem }
     );
 
     await db.playbackSession.create({
       data: {
         userId: req.userId!,
         releaseId: body.releaseId,
-        trackId: body.trackId,
+        trackId: resolved.trackId,
         drmSystem,
         tokenHash: hashToken(token),
         expiresAt,
