@@ -6,50 +6,7 @@
 import 'dotenv/config';
 import { env } from '../config/env.js';
 import { disconnectPrisma, getPrisma } from '../lib/prisma.js';
-
-async function processDrmPackage(data: {
-  mediaAssetId: string;
-  jobId: string;
-}) {
-  const db = await getPrisma();
-  await db.drmPackagingJob.update({
-    where: { id: data.jobId },
-    data: { status: 'packaging' },
-  });
-  await db.mediaAsset.update({
-    where: { id: data.mediaAssetId },
-    data: { drmStatus: 'packaging' },
-  });
-
-  // Production: invoke AWS MediaConvert / Shaka Packager + EZDRM or Axinom
-  // 1. Transcode source → CMAF/fMP4 mezzanine
-  // 2. Encrypt with AES-128-CBC (FairPlay) + AES-CTR (Widevine CENC)
-  // 3. Upload HLS + DASH manifests to S3
-  // 4. Register content key with DRM license provider
-  console.info(
-    `[drm-package] TODO: package ${data.mediaAssetId} via ${env.DRM_PROVIDER ?? 'aws_mediaconvert'}`
-  );
-
-  const contentKeyId = `kid_${data.mediaAssetId.replace(/-/g, '').slice(0, 32)}`;
-  const hlsKey = `drm/${data.mediaAssetId}/master.m3u8`;
-  const dashKey = `drm/${data.mediaAssetId}/manifest.mpd`;
-
-  await db.mediaAsset.update({
-    where: { id: data.mediaAssetId },
-    data: {
-      drmStatus: 'ready',
-      contentKeyId,
-      hlsManifestKey: hlsKey,
-      dashManifestKey: dashKey,
-      widevineReady: true,
-      fairplayReady: true,
-    },
-  });
-  await db.drmPackagingJob.update({
-    where: { id: data.jobId },
-    data: { status: 'ready', completedAt: new Date() },
-  });
-}
+import { processDrmPackage } from './drm-package.js';
 
 async function processTasteSync(data: { userId: string }) {
   const db = await getPrisma();
