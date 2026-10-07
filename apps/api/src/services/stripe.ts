@@ -265,6 +265,47 @@ async function recordReleasePurchase(session: Stripe.Checkout.Session): Promise<
   });
 }
 
+function paymentIntentId(value: unknown): string | null {
+  if (typeof value === 'string' && value.length > 0) return value;
+  if (value && typeof value === 'object' && 'id' in value) {
+    const id = (value as { id: unknown }).id;
+    if (typeof id === 'string' && id.length > 0) return id;
+  }
+  return null;
+}
+
+/**
+ * PaymentIntent id whose Purchase row must be deleted after money is returned.
+ * Full refunds and lost disputes revoke access; partial refunds do not.
+ */
+export function paymentIdToRevokeFromEvent(
+  event: Pick<Stripe.Event, 'type' | 'data'>
+): string | null {
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as Stripe.Charge;
+    if (!charge.refunded) return null;
+    return paymentIntentId(charge.payment_intent);
+  }
+
+  if (event.type === 'charge.dispute.closed') {
+    const dispute = event.data.object as Stripe.Dispute;
+    if (dispute.status !== 'lost' && dispute.status !== 'charge_refunded') {
+      return null;
+    }
+    return paymentIntentId(dispute.payment_intent);
+  }
+
+  return null;
+}
+
+async function revokeReleasePurchase(paymentId: string): Promise<void> {
+  if (!isDatabaseConfigured()) return;
+
+  const { getPrisma } = await import('../lib/prisma.js');
+  const db = await getPrisma();
+  await db.purchase.deleteMany({ where: { stripePaymentId: paymentId } });
+}
+
 export async function handleStripeWebhook(
   rawBody: Buffer,
   signature: string
@@ -287,6 +328,12 @@ export async function handleStripeWebhook(
         account.payouts_enabled ?? false
       );
     }
+    return;
+  }
+
+  const revokePaymentId = paymentIdToRevokeFromEvent(event);
+  if (revokePaymentId) {
+    await revokeReleasePurchase(revokePaymentId);
     return;
   }
 
