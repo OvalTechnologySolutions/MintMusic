@@ -115,6 +115,91 @@ describe('POST /v1/auth/oauth', () => {
     expect(replay.body.user.id).toBe(victimId);
     expect(replay.body.user.name).toBe('Victim Updated');
   });
+
+  it('keeps the same user when the identity provider email changes', async () => {
+    const accountId = `google-email-change-${Date.now()}`;
+    const created = await request(app)
+      .post('/v1/auth/oauth')
+      .set(authHeaders())
+      .send({
+        email: testEmail('before-change'),
+        name: 'Same Person',
+        provider: 'google',
+        providerAccountId: accountId,
+      });
+    expect(created.status).toBe(200);
+    const userId = created.body.user.id as string;
+
+    const nextEmail = testEmail('after-change');
+    const updated = await request(app)
+      .post('/v1/auth/oauth')
+      .set(authHeaders())
+      .send({
+        email: nextEmail,
+        name: 'Same Person',
+        provider: 'google',
+        providerAccountId: accountId,
+      });
+
+    expect(updated.status).toBe(200);
+    expect(updated.body.user.id).toBe(userId);
+    expect(updated.body.user.email).toBe(nextEmail);
+  });
+
+  it('does not move an IdP account onto an email owned by someone else', async () => {
+    const victimEmail = testEmail('keep-email');
+    const victimAccount = `google-keep-${Date.now()}`;
+    const victim = await request(app)
+      .post('/v1/auth/oauth')
+      .set(authHeaders())
+      .send({
+        email: victimEmail,
+        name: 'Victim',
+        provider: 'google',
+        providerAccountId: victimAccount,
+      });
+    expect(victim.status).toBe(200);
+    const victimId = victim.body.user.id as string;
+
+    const attackerAccount = `github-move-${Date.now()}`;
+    const attacker = await request(app)
+      .post('/v1/auth/oauth')
+      .set(authHeaders())
+      .send({
+        email: testEmail('attacker-old'),
+        name: 'Attacker',
+        provider: 'github',
+        providerAccountId: attackerAccount,
+      });
+    expect(attacker.status).toBe(200);
+
+    const takeover = await request(app)
+      .post('/v1/auth/oauth')
+      .set(authHeaders())
+      .send({
+        email: victimEmail,
+        name: 'Attacker',
+        provider: 'github',
+        providerAccountId: attackerAccount,
+      });
+
+    expect(takeover.status).toBe(409);
+    expect(takeover.body.code).toBe('CONFLICT');
+
+    const victimReplay = await request(app)
+      .post('/v1/auth/oauth')
+      .set(authHeaders())
+      .send({
+        email: victimEmail,
+        name: 'Victim',
+        provider: 'google',
+        providerAccountId: victimAccount,
+      });
+
+    expect(victimReplay.status).toBe(200);
+    expect(victimReplay.body.user.id).toBe(victimId);
+    expect(victimReplay.body.user.email).toBe(victimEmail);
+  });
 });
 
 afterAll(async () => {
