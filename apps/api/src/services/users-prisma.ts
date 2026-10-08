@@ -70,6 +70,38 @@ export async function findUserById(id: string): Promise<User | undefined> {
 export async function upsertOAuthUser(input: OAuthSyncRequest): Promise<User> {
   const db = await getPrisma();
   const email = input.email.toLowerCase();
+
+  const byAccount = await db.user.findFirst({
+    where: {
+      provider: input.provider,
+      providerAccountId: input.providerAccountId,
+    },
+    orderBy: { createdAt: 'asc' },
+    include: { socialLinks: true },
+  });
+
+  if (byAccount) {
+    if (byAccount.email !== email) {
+      const emailOwner = await db.user.findUnique({ where: { email } });
+      if (emailOwner && emailOwner.id !== byAccount.id) {
+        throw new ConflictError(
+          'This email is already registered with a different sign-in method'
+        );
+      }
+    }
+
+    const row = await db.user.update({
+      where: { id: byAccount.id },
+      data: {
+        email,
+        name: input.name,
+        image: input.image,
+      },
+      include: { socialLinks: true },
+    });
+    return mapUser(row);
+  }
+
   const existing = await db.user.findUnique({
     where: { email },
     include: { socialLinks: true },

@@ -62,9 +62,39 @@ export async function findUserRecordById(
 export async function upsertOAuthUser(input: OAuthSyncRequest): Promise<User> {
   const users = await load();
   const now = new Date().toISOString();
-  const existingIdx = users.findIndex(
-    (u) => u.email.toLowerCase() === input.email.toLowerCase()
+  const email = input.email.toLowerCase();
+
+  const byAccountIdx = users.findIndex(
+    (u) =>
+      u.provider === input.provider &&
+      u.providerAccountId === input.providerAccountId
   );
+
+  if (byAccountIdx >= 0) {
+    const existing = users[byAccountIdx];
+    if (existing.email.toLowerCase() !== email) {
+      const emailTaken = users.some(
+        (u, i) => i !== byAccountIdx && u.email.toLowerCase() === email
+      );
+      if (emailTaken) {
+        throw new ConflictError(
+          'This email is already registered with a different sign-in method'
+        );
+      }
+    }
+    users[byAccountIdx] = {
+      ...existing,
+      email,
+      name: input.name || existing.name,
+      image: input.image ?? existing.image,
+      socialLinks: existing.socialLinks ?? [],
+      updatedAt: now,
+    };
+    await save(users);
+    return toPublicUser(users[byAccountIdx]);
+  }
+
+  const existingIdx = users.findIndex((u) => u.email.toLowerCase() === email);
 
   if (existingIdx >= 0) {
     const existing = users[existingIdx];
@@ -78,6 +108,7 @@ export async function upsertOAuthUser(input: OAuthSyncRequest): Promise<User> {
     }
     users[existingIdx] = {
       ...existing,
+      email,
       name: input.name || existing.name,
       image: input.image ?? existing.image,
       socialLinks: existing.socialLinks ?? [],
@@ -89,7 +120,7 @@ export async function upsertOAuthUser(input: OAuthSyncRequest): Promise<User> {
 
   const user: UserRecord = {
     id: newId(),
-    email: input.email,
+    email,
     name: input.name,
     image: input.image,
     role: 'collector',
